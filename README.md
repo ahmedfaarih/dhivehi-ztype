@@ -50,55 +50,17 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to:
-```
-http://localhost:5173
-```
-
 ### Building for Production
 
 ```bash
 npm run build
 ```
-
-The production-ready files will be in the `dist/` directory.
-
-## 🎯 How to Play
-
-1. **Start Typing**: Just start typing English letters - they'll automatically convert to Thaana!
-2. **Target Enemies**: When you start typing a word, the matching enemy turns red
-3. **Destroy Ships**: Complete the word to destroy the enemy and earn points
-4. **Survive**: Don't let enemies reach the bottom or you'll lose a life
-5. **Progress**: Survive waves to face increasing difficulty
-
 ### Controls
 
 - **Type Letters**: English keyboard (converts to Thaana automatically)
 - **Backspace**: Delete last character
 - **Escape**: Clear current input
 - **R**: Restart game (when game is over)
-
-### Phonetic Mapping Examples
-
-The game uses JTK's phonetic keyboard layout:
-
-| Type | You Get | Letter Name |
-|------|---------|-------------|
-| `dh` | `ދ` | Dhaal |
-| `aa` | `ާ` | Aabaafili |
-| `sh` | `ށ` | Shaviyani |
-| `th` | `ތ` | Thaa |
-| `lh` | `ޅ` | Lhaviyani |
-| `kh` | `ޚ` | Khaa |
-| `ch` | `ޗ` | Chaa |
-| `gn` | `ޏ` | Gnaviyani |
-
-**Example Words:**
-- Type `dhivehee` → `ދިވެހީ` (Dhivehi)
-- Type `raajje` → `ރާއްޖެ` (Raajje/Maldives)
-- Type `male` → `މަލެ` (Male)
-
-## 🛠️ Technology Stack
 
 ### Core Technologies
 - **Vanilla JavaScript** - Pure JS, no frameworks
@@ -206,10 +168,8 @@ export const words = {
 
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for improvement:
 
-- [ ] Add more Dhivehi words
 - [ ] Implement high score leaderboard
 - [ ] Add different game modes (time attack, survival, etc.)
-- [ ] Mobile touch controls
 - [ ] Power-ups and special abilities
 - [ ] Better explosion effects and animations
 - [ ] Background music
@@ -243,6 +203,4 @@ For questions, suggestions, or feedback, please open an issue on GitHub.
 
 ---
 
-**Made with ❤️ for the Dhivehi-speaking community**
-
-ދިވެހި ބަހުގެ މުޖުތަމަޢަށް ލޯބީގައި ހަދާފައި
+**Made for just killing time**
