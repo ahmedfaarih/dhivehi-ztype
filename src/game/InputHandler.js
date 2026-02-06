@@ -1,4 +1,5 @@
 import { normalizeThaana } from '../utils/thaana.js';
+import { SoundManager } from '../utils/SoundManager.js';
 
 /**
  * Handles Thaana keyboard input for the game
@@ -10,9 +11,14 @@ export class InputHandler {
     this.currentInput = '';
     this.inputDisplay = document.getElementById('input-display');
     this.hiddenInput = document.getElementById('hidden-input');
+    this.soundManager = new SoundManager();
+    this.lastInputLength = 0; // Track input length to detect new characters
 
     console.log('InputHandler constructor called');
     console.log('Hidden input element:', this.hiddenInput);
+
+    // Load sounds
+    this.soundManager.loadSounds();
 
     this.setupEventListeners();
 
@@ -37,9 +43,8 @@ export class InputHandler {
 
       console.log('KEYUP - Value:', value);
 
-      this.currentInput = value;
-
-      this.checkMatches();
+      // Validate input before accepting it
+      this.validateAndUpdateInput(value);
     });
 
     this.hiddenInput.addEventListener('input', (e) => {
@@ -47,9 +52,8 @@ export class InputHandler {
 
       console.log('INPUT EVENT - Value:', value);
 
-      this.currentInput = value;
-
-      this.checkMatches();
+      // Validate input before accepting it
+      this.validateAndUpdateInput(value);
     });
 
     document.addEventListener('click', () => {
@@ -69,6 +73,50 @@ export class InputHandler {
   }
 
   /**
+   * Validate and update input - only accept characters that match targeted enemy
+   * @param {string} newValue - New input value from text field
+   */
+  validateAndUpdateInput(newValue) {
+    // If input is being cleared or shortened (backspace), always allow it
+    if (newValue.length <= this.currentInput.length) {
+      this.currentInput = newValue;
+      this.checkMatches();
+      return;
+    }
+
+    // Check if we have a targeted enemy
+    const targetedEnemy = this.game.enemies.find(e => e.targeted);
+
+    if (targetedEnemy) {
+      // We have a locked target - validate the new input
+      const normalizedNewValue = normalizeThaana(newValue);
+      const normalizedTargetWord = normalizeThaana(targetedEnemy.word);
+
+      console.log(`Validating: "${newValue}" against locked target: "${targetedEnemy.word}"`);
+
+      // Check if the new input still matches the target
+      if (normalizedTargetWord.startsWith(normalizedNewValue)) {
+        // Valid input - accept it
+        console.log('✓ Valid character - accepting');
+        this.currentInput = newValue;
+        this.soundManager.playShotgun();
+        this.checkMatches();
+      } else {
+        // Invalid input - reject it
+        console.log('✗ Invalid character - rejecting');
+        this.soundManager.playEmpty();
+
+        // Revert the input field to the previous valid state
+        this.hiddenInput.value = this.currentInput;
+      }
+    } else {
+      // No locked target - accept any input and try to find a match
+      this.currentInput = newValue;
+      this.checkMatches();
+    }
+  }
+
+  /**
    * Check if current input matches any enemy words
    */
   checkMatches() {
@@ -76,6 +124,7 @@ export class InputHandler {
 
     if (!this.currentInput || this.currentInput.length === 0) {
       this.game.clearAllTargets();
+      this.lastInputLength = 0;
       return;
     }
 
@@ -85,6 +134,9 @@ export class InputHandler {
 
     let foundMatch = false;
     let matchedEnemy = null;
+
+    // Check if this is a new character being typed (used only for initial match sound)
+    const isNewCharacter = this.currentInput.length > this.lastInputLength;
 
     for (const enemy of this.game.enemies) {
       const normalizedWord = normalizeThaana(enemy.word);
@@ -96,6 +148,12 @@ export class InputHandler {
           foundMatch = true;
           matchedEnemy = enemy;
           console.log('✓ Match found:', enemy.word);
+
+          // Play shotgun sound ONLY when initially finding a match (not locked yet)
+          // When locked, sound is played in validateAndUpdateInput
+          if (isNewCharacter && !this.game.enemies.some(e => e.targeted)) {
+            this.soundManager.playShotgun();
+          }
         }
 
         if (normalizedInput === normalizedWord) {
@@ -106,8 +164,10 @@ export class InputHandler {
       }
     }
 
-    if (!foundMatch) {
-      console.log('No matches found');
+    // Play empty sound if no match found (only when not locked)
+    if (!foundMatch && isNewCharacter && !this.game.enemies.some(e => e.targeted)) {
+      console.log('No matches found - playing empty sound');
+      this.soundManager.playEmpty();
     }
 
     for (const enemy of this.game.enemies) {
@@ -122,6 +182,9 @@ export class InputHandler {
         enemy.setTargeted(false);
       }
     }
+
+    // Update last input length
+    this.lastInputLength = this.currentInput.length;
 
     return foundMatch;
   }
@@ -154,6 +217,7 @@ export class InputHandler {
   clear() {
     console.log('Clearing input');
     this.currentInput = '';
+    this.lastInputLength = 0;
     if (this.hiddenInput) {
       this.hiddenInput.value = '';
     }

@@ -106,12 +106,14 @@ The game uses JTK's phonetic keyboard layout:
 - **CSS3** - Styling and animations
 - **Vite** - Build tool and dev server
 
-### Libraries
-- **[JTK (Javascript Thaana Keyboard)](https://github.com/jawish/jtk)** - Phonetic Thaana input
-- **Web Audio API** - Sound effects
+### Libraries & APIs
+- **[JTK (Javascript Thaana Keyboard)](https://github.com/jawish/jtk)** by Jawish Hameed - Phonetic Thaana input
+- **Web Audio API** - Sound effects and audio playback
+- **HTML5 Canvas API** - 2D graphics rendering
 
-### Fonts
-- **Waheed (MV Waheed)** - Thaana font for authentic Dhivehi text
+### Assets
+- **MV Waheed Font** - Thaana/Dhivehi font for authentic text rendering
+- **Sound Effects** from [Freesound.org](https://freesound.org) - Audio feedback for gameplay
 
 ## 📁 Project Structure
 
@@ -220,9 +222,20 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Credits
 
-- **JTK (Javascript Thaana Keyboard)** by [Jawish Hameed](https://github.com/jawish) - Phonetic Thaana input
-- **Waheed Font** - Thaana typography
-- Inspired by **ZType** by Dominic Szablewski
+### Libraries & Tools
+- **JTK (Javascript Thaana Keyboard)** by [Jawish Hameed](https://github.com/jawish) - Phonetic Thaana input system
+- Inspired by **ZType** by Dominic Szablewski - Original typing game concept
+
+### Fonts
+- **MV Waheed (A_Waheed)** - Authentic Thaana/Dhivehi font for text rendering
+  - Part of the Dhivehi font collection
+  - Provides clear and readable Thaana characters
+
+### Sound Effects
+- Sound effects sourced from **[Freesound.org](https://freesound.org)**
+  - `shotgun.wav` - Correct typing feedback
+  - `empty.wav` - Incorrect typing feedback
+  - Licensed under Creative Commons
 
 ## 📧 Contact
 
