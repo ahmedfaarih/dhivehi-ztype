@@ -1,0 +1,105 @@
+@font-face {
+  font-family: 'Waheed';
+  src: url('./fonts/A_Waheed/avas3_.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000;
+  font-family: 'Waheed', Arial, sans-serif;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#gameCanvas {
+  display: block;
+  background-color: #000814;
+  box-shadow: 0 0 20px rgba(0, 119, 255, 0.3);
+}
+
+#ui-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #fff;
+  font-size: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 10;
+}
+
+#ui-overlay > div {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+#score {
+  color: #00ff88;
+}
+
+#wave {
+  color: #00bbff;
+}
+
+#lives {
+  color: #ff4466;
+}
+
+/* Hide the duplicate input display since we're showing the actual input */
+#input-display {
+  display: none;
+}
+
+/* Visible input for JTK - positioned at bottom but styled to blend */
+#hidden-input {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  padding: 15px 25px;
+  font-size: 28px;
+  direction: rtl;
+  font-family: 'Waheed', Arial, sans-serif;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(0, 187, 255, 0.6);
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 187, 255, 0.3);
+  z-index: 100;
+}
+
+#hidden-input:focus {
+  border-color: rgba(0, 255, 136, 0.8);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+}
+
+#hidden-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'Waheed', Arial, sans-serif;
+}
+
+/* JTK Thaana input styling */
+.thaanaKeyboardInput {
+  direction: rtl;
+  font-family: 'Waheed', Arial, sans-serif;
+}

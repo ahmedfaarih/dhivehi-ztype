@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="dv">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ދިވެހި ޓައިޕް | Dhivehi Type</title>
+    <!-- JTK - Javascript Thaana Keyboard -->
+    <script type="text/javascript" src="/jtk.min.js"></script>
+    <script type="text/javascript">
+      // Set default keyboard to phonetic (Segha version)
+      window.addEventListener('DOMContentLoaded', function() {
+        if (typeof thaanaKeyboard !== 'undefined') {
+          thaanaKeyboard.defaultKeyboard = 'phonetic';
+          console.log('✅ JTK initialized with phonetic keyboard');
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="game-container">
+      <canvas id="gameCanvas"></canvas>
+      <div id="ui-overlay">
+        <div id="score">Score: 0</div>
+        <div id="wave">Wave: 1</div>
+        <div id="lives">Lives: 3</div>
+      </div>
+      <!-- Input field with JTK Thaana keyboard support -->
+      <input type="text" id="hidden-input" class="thaanaKeyboardInput" placeholder="ލިޔަން ފަށާ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <input type="hidden" name="hidden-input_thaanaKeyboardState" value="phonetic" />
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
