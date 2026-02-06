@@ -76,6 +76,7 @@ npm run build
 ### Assets
 - **MV Waheed Font** - Thaana/Dhivehi font for authentic text rendering
 - **Sound Effects** from [Freesound.org](https://freesound.org) - Audio feedback for gameplay
+- **Ship Graphics** by [ArtDisruptor](https://www.facebook.com/ArtDisruptor/) - Player and enemy ship sprites
 
 ## 📁 Project Structure
 
@@ -196,6 +197,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - `shotgun.wav` - Correct typing feedback
   - `empty.wav` - Incorrect typing feedback
   - Licensed under Creative Commons
+
+### Graphics & Sprites
+- **Ship Artwork** by **[ArtDisruptor](https://www.facebook.com/ArtDisruptor/)**
+  - `goodship.png` - Player ship sprite
+  - `badship.png` - Enemy ship sprite
+  - Custom artwork for game visuals
 
 ## 📧 Contact
 

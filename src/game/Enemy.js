@@ -6,7 +6,7 @@ export class Enemy {
     this.word = word;
     this.x = x;
     this.y = y;
-    this.speed = speed; 
+    this.speed = speed;
     this.baseSpeed = speed;
     this.targeted = false;
     this.health = word.length;
@@ -14,15 +14,29 @@ export class Enemy {
     this.alive = true;
     this.dying = false;
 
-    
-    this.size = 20;
+    // Load ship image
+    this.image = new Image();
+    this.image.src = '/src/images/badship.png';
+    this.imageLoaded = false;
+    this.image.onload = () => {
+      this.imageLoaded = true;
+    };
+
+    this.size = 20; // Smaller enemy ships
     this.color = '#00ff88';
     this.targetColor = '#ff4466';
-    this.wordOffset = 35;
+    this.wordOffset = 38; // Adjusted for smaller image
 
     this.pulsePhase = Math.random() * Math.PI * 2;
     this.deathTimer = 0;
-    this.deathDuration = 0.3; 
+    this.deathDuration = 0.3;
+
+    // Hit animation properties
+    this.isHit = false;
+    this.hitTimer = 0;
+    this.hitDuration = 0.2; // 200ms flash
+    this.hitShakeX = 0;
+    this.hitShakeY = 0;
   }
 
   /**
@@ -38,13 +52,32 @@ export class Enemy {
       return;
     }
 
-    
+    // Move down
     this.y += this.speed * deltaTime;
 
-    
+    // Pulse animation
     this.pulsePhase += deltaTime * 3;
 
-    
+    // Update hit animation
+    if (this.isHit) {
+      this.hitTimer += deltaTime;
+
+      // Shake effect
+      this.hitShakeX = (Math.random() - 0.5) * 8;
+      this.hitShakeY = (Math.random() - 0.5) * 8;
+
+      if (this.hitTimer >= this.hitDuration) {
+        this.isHit = false;
+        this.hitTimer = 0;
+        this.hitShakeX = 0;
+        this.hitShakeY = 0;
+
+        // Restore speed after hit
+        this.speed = this.baseSpeed;
+      }
+    }
+
+    // Check if off screen (bottom)
     if (this.y > window.innerHeight + 100) {
       this.alive = false;
     }
@@ -62,36 +95,59 @@ export class Enemy {
 
     ctx.save();
 
-    
     const pulse = this.targeted ? Math.sin(this.pulsePhase) * 0.15 + 1 : 1;
     const currentSize = this.size * pulse;
 
-    
-    ctx.fillStyle = this.targeted ? this.targetColor : this.color;
-    ctx.beginPath();
+    // Apply hit shake
+    const drawX = this.x + this.hitShakeX;
+    const drawY = this.y + this.hitShakeY;
 
-    
-    ctx.moveTo(this.x, this.y + currentSize); 
-    ctx.lineTo(this.x - currentSize, this.y - currentSize); 
-    ctx.lineTo(this.x + currentSize, this.y - currentSize); 
-    ctx.closePath();
-    ctx.fill();
+    if (this.imageLoaded) {
+      // Draw image
+      if (this.targeted) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = this.targetColor;
+      }
 
-    
-    if (this.targeted) {
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = this.targetColor;
+      // Apply hit flash effect
+      if (this.isHit) {
+        ctx.globalAlpha = 0.5 + Math.sin(this.hitTimer * 30) * 0.5;
+      }
+
+      ctx.drawImage(
+        this.image,
+        drawX - currentSize,
+        drawY - currentSize,
+        currentSize * 2,
+        currentSize * 2
+      );
+
+      ctx.globalAlpha = 1.0;
+    } else {
+      // Fallback to triangle if image not loaded
+      ctx.fillStyle = this.targeted ? this.targetColor : this.color;
+      ctx.beginPath();
+
+      ctx.moveTo(drawX, drawY + currentSize);
+      ctx.lineTo(drawX - currentSize, drawY - currentSize);
+      ctx.lineTo(drawX + currentSize, drawY - currentSize);
+      ctx.closePath();
       ctx.fill();
+
+      if (this.targeted) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = this.targetColor;
+        ctx.fill();
+      }
     }
 
-    
+    // Draw word above ship
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px "Waheed", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    
     ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetX = 2;
@@ -99,7 +155,7 @@ export class Enemy {
 
     ctx.fillText(this.word, this.x, this.y - this.wordOffset);
 
-    
+    // Draw health bar
     this.drawHealthBar(ctx);
 
     ctx.restore();
@@ -180,6 +236,14 @@ export class Enemy {
    */
   hit(damage = 1) {
     this.health -= damage;
+
+    // Trigger hit animation
+    this.isHit = true;
+    this.hitTimer = 0;
+
+    // Slow down when hit (70% speed)
+    this.speed = this.baseSpeed * 0.7;
+
     if (this.health <= 0) {
       this.destroy();
     }

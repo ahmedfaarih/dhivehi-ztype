@@ -5,12 +5,20 @@ export class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.size = 25;
+    this.size = 40; // Increased for image
     this.color = '#00bbff';
     this.lives = 3;
     this.maxLives = 3;
 
-    
+    // Load ship image
+    this.image = new Image();
+    this.image.src = '/src/images/goodship.png';
+    this.imageLoaded = false;
+    this.image.onload = () => {
+      this.imageLoaded = true;
+      console.log('✅ Player ship image loaded');
+    };
+
     this.pulsePhase = 0;
     this.targetEnemy = null;
   }
@@ -31,29 +39,35 @@ export class Player {
   draw(ctx) {
     ctx.save();
 
-    
     const pulse = Math.sin(this.pulsePhase) * 0.1 + 1;
     const currentSize = this.size * pulse;
 
-    
-    ctx.fillStyle = this.color;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = this.color;
+    if (this.imageLoaded) {
+      // Draw image with glow effect
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = this.color;
 
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y - currentSize); 
-    ctx.lineTo(this.x - currentSize, this.y + currentSize); 
-    ctx.lineTo(this.x + currentSize, this.y + currentSize); 
-    ctx.closePath();
-    ctx.fill();
+      // Draw the image centered
+      ctx.drawImage(
+        this.image,
+        this.x - currentSize,
+        this.y - currentSize,
+        currentSize * 2,
+        currentSize * 2
+      );
+    } else {
+      // Fallback to triangle if image not loaded
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = this.color;
 
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, currentSize * 0.3, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - currentSize);
+      ctx.lineTo(this.x - currentSize, this.y + currentSize);
+      ctx.lineTo(this.x + currentSize, this.y + currentSize);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     ctx.restore();
   }

@@ -246,13 +246,13 @@ export class Game {
    */
   updateUI() {
     if (this.scoreElement) {
-      this.scoreElement.textContent = `Score: ${this.score}`;
+      this.scoreElement.textContent = `ސްކޯ: ${this.score}`;
     }
     if (this.waveElement) {
-      this.waveElement.textContent = `Wave: ${this.wave}`;
+      this.waveElement.textContent = `ވޭވް: ${this.wave}`;
     }
     if (this.livesElement) {
-      this.livesElement.textContent = `Lives: ${this.player.getLives()}`;
+      this.livesElement.textContent = `ލައިވްސް: ${this.player.getLives()}`;
     }
   }
 

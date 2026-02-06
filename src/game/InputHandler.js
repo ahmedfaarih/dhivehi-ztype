@@ -100,6 +100,10 @@ export class InputHandler {
         console.log('✓ Valid character - accepting');
         this.currentInput = newValue;
         this.soundManager.playShotgun();
+
+        // Hit the enemy (reduce health by 1)
+        targetedEnemy.hit(1);
+
         this.checkMatches();
       } else {
         // Invalid input - reject it
