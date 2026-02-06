@@ -35,11 +35,13 @@ export class ParticleSystem {
   update(deltaTime) {
     for (const particle of this.particles) {
       if (particle.type === 'star') {
-        particle.x -= particle.speed * deltaTime;
+        // Move stars vertically downward
+        particle.y += particle.speed * deltaTime;
 
-        if (particle.x < -10) {
-          particle.x = this.width + 10;
-          particle.y = Math.random() * this.height;
+        // Reset at top when star goes off bottom
+        if (particle.y > this.height + 10) {
+          particle.y = -10;
+          particle.x = Math.random() * this.width;
         }
 
         particle.twinklePhase += particle.twinkleSpeed * deltaTime;

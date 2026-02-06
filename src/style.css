@@ -37,16 +37,17 @@ body {
 #ui-overlay {
   position: absolute;
   top: 20px;
-  left: 20px;
+  right: 20px;
   color: #fff;
   font-size: 20px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
   z-index: 10;
+  text-align: right;
 }
 
 #ui-overlay > div {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
 }
 
@@ -58,8 +59,48 @@ body {
   color: #00bbff;
 }
 
-#lives {
-  color: #ff4466;
+#health-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+#health-bar {
+  display: flex;
+  gap: 3px;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #00ff88;
+  border-radius: 4px;
+  position: relative;
+  order: 1;
+}
+
+/* Battery tip on the right side */
+#health-bar::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 12px;
+  background: #00ff88;
+  border-radius: 0 2px 2px 0;
+}
+
+.health-segment {
+  width: 25px;
+  height: 16px;
+  background: linear-gradient(to bottom, #00ff88, #00cc66);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  transition: all 0.3s ease;
+}
+
+.health-segment.lost {
+  background: rgba(100, 100, 100, 0.3);
+  box-shadow: none;
 }
 
 /* Hide the duplicate input display since we're showing the actual input */

@@ -101,8 +101,14 @@ export class InputHandler {
         this.currentInput = newValue;
         this.soundManager.playShotgun();
 
+        // Fire bullet at the enemy
+        this.game.fireBullet(targetedEnemy);
+
         // Hit the enemy (reduce health by 1)
         targetedEnemy.hit(1);
+
+        // Update typed characters count for visual feedback
+        targetedEnemy.setTypedChars(normalizedNewValue.length);
 
         this.checkMatches();
       } else {
@@ -177,6 +183,8 @@ export class InputHandler {
     for (const enemy of this.game.enemies) {
       if (enemy === matchedEnemy) {
         enemy.setTargeted(true);
+        // Update typed characters count for visual feedback
+        enemy.setTypedChars(normalizedInput.length);
 
         const normalizedWord = normalizeThaana(enemy.word);
         if (normalizedInput === normalizedWord) {

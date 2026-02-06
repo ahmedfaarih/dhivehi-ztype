@@ -2,6 +2,7 @@ import { Player } from './Player.js';
 import { Enemy } from './Enemy.js';
 import { InputHandler } from './InputHandler.js';
 import { ParticleSystem } from './ParticleSystem.js';
+import { Bullet } from './Bullet.js';
 import { getRandomWord, getDifficultyForWave } from '../data/words.js';
 
 /**
@@ -33,17 +34,29 @@ export class Game {
     // Game objects
     this.player = new Player(this.width / 2, this.height - 80);
     this.enemies = [];
+    this.bullets = [];
     this.particles = new ParticleSystem(this.width, this.height);
     this.input = new InputHandler(this);
 
     // UI elements
     this.scoreElement = document.getElementById('score');
     this.waveElement = document.getElementById('wave');
-    this.livesElement = document.getElementById('lives');
+    this.healthSegments = document.querySelectorAll('.health-segment');
 
     // Sound (simple oscillator-based sounds)
     this.audioContext = null;
     this.initAudio();
+
+    // Load background image
+    this.backgroundImage = new Image();
+    this.backgroundImage.src = '/src/images/bg_space_seamless.png';
+    this.backgroundImageLoaded = false;
+    this.backgroundScrollY = 0; // Background scroll position
+    this.backgroundScrollSpeed = 20; // Pixels per second
+    this.backgroundImage.onload = () => {
+      this.backgroundImageLoaded = true;
+      console.log('✅ Background image loaded');
+    };
 
     // Initialize
     this.init();
@@ -122,11 +135,31 @@ export class Game {
    * @param {number} dt - Delta time in seconds
    */
   update(dt) {
+    // Update background scroll
+    if (this.backgroundImageLoaded) {
+      this.backgroundScrollY += this.backgroundScrollSpeed * dt;
+      // Reset when scrolled one full image height (seamless loop)
+      if (this.backgroundScrollY >= this.backgroundImage.height) {
+        this.backgroundScrollY = 0;
+      }
+    }
+
     // Update player
     this.player.update(dt);
 
     // Update particles
     this.particles.update(dt);
+
+    // Update bullets
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+      bullet.update(dt);
+
+      // Remove dead bullets
+      if (!bullet.isAlive()) {
+        this.bullets.splice(i, 1);
+      }
+    }
 
     // Update enemies
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -139,12 +172,12 @@ export class Game {
         continue;
       }
 
-      // Check if enemy reached bottom (player takes damage)
-      if (enemy.isOffScreen(this.height + 50) && !enemy.dying) {
+      // Check if enemy reached bottom or collided with player
+      if ((enemy.isOffScreen(this.height + 50) || this.checkCollision(enemy, this.player)) && !enemy.dying) {
         this.player.takeDamage();
         this.updateUI();
         this.playSound('damage');
-        this.enemies.splice(i, 1);
+        enemy.destroy(); // Destroy the enemy on contact
 
         // Check game over
         if (!this.player.isAlive()) {
@@ -175,16 +208,40 @@ export class Game {
    * Render game
    */
   render() {
-    // Clear canvas
+    // Clear canvas with solid color (fallback)
     this.ctx.fillStyle = '#000814';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Draw starfield
+    // Draw scrolling background image if loaded
+    if (this.backgroundImageLoaded) {
+      const bgWidth = this.backgroundImage.width;
+      const bgHeight = this.backgroundImage.height;
+
+      // Calculate how many times to tile horizontally
+      const tilesX = Math.ceil(this.width / bgWidth) + 1;
+      const tilesY = 2; // Always draw 2 vertically for seamless loop
+
+      // Draw background tiles with vertical scroll offset
+      for (let x = 0; x < tilesX; x++) {
+        for (let y = 0; y < tilesY; y++) {
+          const drawY = y * bgHeight - this.backgroundScrollY;
+          this.ctx.drawImage(
+            this.backgroundImage,
+            x * bgWidth,
+            drawY,
+            bgWidth,
+            bgHeight
+          );
+        }
+      }
+    }
+
+    // Draw starfield on top for depth effect
     this.particles.draw(this.ctx);
 
-    // Draw targeting lines
-    if (this.player.targetEnemy) {
-      this.player.drawTargetingLine(this.ctx, this.player.targetEnemy);
+    // Draw bullets
+    for (const bullet of this.bullets) {
+      bullet.draw(this.ctx);
     }
 
     // Draw enemies
@@ -214,7 +271,7 @@ export class Game {
     // Speed increases with wave (slower progression)
     const speed = 60 + this.wave * 3;
 
-    const enemy = new Enemy(word, x, -50, speed);
+    const enemy = new Enemy(word, x, -50, speed, this.player);
     this.enemies.push(enemy);
   }
 
@@ -251,9 +308,16 @@ export class Game {
     if (this.waveElement) {
       this.waveElement.textContent = `ވޭވް: ${this.wave}`;
     }
-    if (this.livesElement) {
-      this.livesElement.textContent = `ލައިވްސް: ${this.player.getLives()}`;
-    }
+
+    // Update health bar segments
+    const currentLives = this.player.getLives();
+    this.healthSegments.forEach((segment, index) => {
+      if (index < currentLives) {
+        segment.classList.remove('lost');
+      } else {
+        segment.classList.add('lost');
+      }
+    });
   }
 
   /**
@@ -263,6 +327,36 @@ export class Game {
     for (const enemy of this.enemies) {
       enemy.setTargeted(false);
     }
+  }
+
+  /**
+   * Fire a bullet at an enemy
+   * @param {Enemy} enemy - Target enemy
+   */
+  fireBullet(enemy) {
+    if (enemy) {
+      const bullet = new Bullet(
+        this.player.x,
+        this.player.y,
+        enemy.x,
+        enemy.y
+      );
+      this.bullets.push(bullet);
+    }
+  }
+
+  /**
+   * Check collision between enemy and player
+   * @param {Enemy} enemy - Enemy object
+   * @param {Player} player - Player object
+   * @returns {boolean} True if colliding
+   */
+  checkCollision(enemy, player) {
+    const dx = enemy.x - player.x;
+    const dy = enemy.y - player.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const minDistance = enemy.size + player.size;
+    return distance < minDistance;
   }
 
   /**
@@ -373,6 +467,7 @@ export class Game {
     this.waveTimer = 0;
     this.spawnInterval = 4.0;
     this.enemies = [];
+    this.bullets = [];
     this.player.lives = this.player.maxLives;
     this.player.x = this.width / 2;
     this.player.y = this.height - 80;

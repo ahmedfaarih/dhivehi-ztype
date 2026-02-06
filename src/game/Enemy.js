@@ -2,12 +2,13 @@
  * Enemy class - represents an enemy ship with a word
  */
 export class Enemy {
-  constructor(word, x, y, speed = 80) {
+  constructor(word, x, y, speed = 80, player = null) {
     this.word = word;
     this.x = x;
     this.y = y;
     this.speed = speed;
     this.baseSpeed = speed;
+    this.player = player; // Reference to player for homing
     this.targeted = false;
     this.health = word.length;
     this.maxHealth = word.length;
@@ -22,10 +23,19 @@ export class Enemy {
       this.imageLoaded = true;
     };
 
-    this.size = 20; // Smaller enemy ships
+    // Load explosion gif
+    this.explosionGif = new Image();
+    this.explosionGif.src = '/src/images/blow.gif';
+    this.explosionGifLoaded = false;
+    this.explosionGif.onload = () => {
+      this.explosionGifLoaded = true;
+    };
+
+    this.size = 15; // Even smaller enemy ships
     this.color = '#00ff88';
     this.targetColor = '#ff4466';
-    this.wordOffset = 38; // Adjusted for smaller image
+    this.wordOffset = 30; // Adjusted for smaller image
+    this.typedChars = 0; // Track how many characters have been typed
 
     this.pulsePhase = Math.random() * Math.PI * 2;
     this.deathTimer = 0;
@@ -52,8 +62,22 @@ export class Enemy {
       return;
     }
 
-    // Move down
-    this.y += this.speed * deltaTime;
+    // Move toward player if player exists, otherwise just move down
+    if (this.player) {
+      // Calculate direction to player
+      const dx = this.player.x - this.x;
+      const dy = this.player.y - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 0) {
+        // Normalize and apply speed
+        this.x += (dx / distance) * this.speed * deltaTime * 0.5; // 50% horizontal speed
+        this.y += (dy / distance) * this.speed * deltaTime;
+      }
+    } else {
+      // Move down if no player reference
+      this.y += this.speed * deltaTime;
+    }
 
     // Pulse animation
     this.pulsePhase += deltaTime * 3;
@@ -141,10 +165,10 @@ export class Enemy {
       }
     }
 
-    // Draw word above ship
+    // Draw word above ship (only remaining untyped characters)
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '24px "Waheed", Arial, sans-serif';
+    ctx.font = '20px "Waheed", Arial, sans-serif'; // Smaller font
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -153,7 +177,9 @@ export class Enemy {
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
 
-    ctx.fillText(this.word, this.x, this.y - this.wordOffset);
+    // Only show the untyped portion of the word
+    const remainingWord = this.word.substring(this.typedChars);
+    ctx.fillText(remainingWord, this.x, this.y - this.wordOffset);
 
     // Draw health bar
     this.drawHealthBar(ctx);
@@ -166,9 +192,9 @@ export class Enemy {
    * @param {CanvasRenderingContext2D} ctx - Canvas context
    */
   drawHealthBar(ctx) {
-    const barWidth = 40;
-    const barHeight = 4;
-    const barY = this.y + this.size + 10;
+    const barWidth = 30; // Smaller bar for smaller ships
+    const barHeight = 3;
+    const barY = this.y + this.size + 8;
 
     
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -191,7 +217,7 @@ export class Enemy {
     const explosionSize = this.size * (1 + progress * 3);
     const alpha = 1 - progress;
 
-    
+
     for (let i = 0; i < 3; i++) {
       const offset = i * 0.3;
       const size = explosionSize * (1 - offset);
@@ -204,7 +230,7 @@ export class Enemy {
       ctx.fill();
     }
 
-    
+
     const particleCount = 8;
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount;
@@ -228,6 +254,18 @@ export class Enemy {
    */
   setTargeted(targeted) {
     this.targeted = targeted;
+    // Reset typed characters when no longer targeted
+    if (!targeted) {
+      this.typedChars = 0;
+    }
+  }
+
+  /**
+   * Set how many characters have been typed
+   * @param {number} count - Number of characters typed
+   */
+  setTypedChars(count) {
+    this.typedChars = count;
   }
 
   /**
