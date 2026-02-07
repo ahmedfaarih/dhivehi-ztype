@@ -1,3 +1,6 @@
+import enemyShipUrl from '../images/badship.png';
+import explosionGifUrl from '../images/blow.gif';
+
 /**
  * Enemy class - represents an enemy ship with a word
  */
@@ -17,7 +20,7 @@ export class Enemy {
 
     // Load ship image
     this.image = new Image();
-    this.image.src = '/src/images/badship.png';
+    this.image.src = enemyShipUrl;
     this.imageLoaded = false;
     this.image.onload = () => {
       this.imageLoaded = true;
@@ -25,7 +28,7 @@ export class Enemy {
 
     // Load explosion gif
     this.explosionGif = new Image();
-    this.explosionGif.src = '/src/images/blow.gif';
+    this.explosionGif.src = explosionGifUrl;
     this.explosionGifLoaded = false;
     this.explosionGif.onload = () => {
       this.explosionGifLoaded = true;

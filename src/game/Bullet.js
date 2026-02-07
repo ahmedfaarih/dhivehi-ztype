@@ -1,3 +1,5 @@
+import bulletImageUrl from '../images/bullet.png';
+
 /**
  * Bullet class - represents a bullet/projectile fired at enemies
  */
@@ -16,7 +18,7 @@ export class Bullet {
 
     // Load bullet image
     this.image = new Image();
-    this.image.src = '/src/images/bullet.png';
+    this.image.src = bulletImageUrl;
     this.imageLoaded = false;
     this.image.onload = () => {
       this.imageLoaded = true;

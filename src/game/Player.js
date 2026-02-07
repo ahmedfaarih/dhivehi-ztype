@@ -1,3 +1,5 @@
+import playerShipUrl from '../images/goodship.png';
+
 /**
  * Player class - represents the player's ship
  */
@@ -12,7 +14,7 @@ export class Player {
 
     // Load ship image
     this.image = new Image();
-    this.image.src = '/src/images/goodship.png';
+    this.image.src = playerShipUrl;
     this.imageLoaded = false;
     this.image.onload = () => {
       this.imageLoaded = true;

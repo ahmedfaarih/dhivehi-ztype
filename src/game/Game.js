@@ -4,6 +4,7 @@ import { InputHandler } from './InputHandler.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { Bullet } from './Bullet.js';
 import { getRandomWord, getDifficultyForWave } from '../data/words.js';
+import backgroundImageUrl from '../images/bg_space_seamless.png';
 
 /**
  * Main Game class
@@ -49,7 +50,7 @@ export class Game {
 
     // Load background image
     this.backgroundImage = new Image();
-    this.backgroundImage.src = '/src/images/bg_space_seamless.png';
+    this.backgroundImage.src = backgroundImageUrl;
     this.backgroundImageLoaded = false;
     this.backgroundScrollY = 0; // Background scroll position
     this.backgroundScrollSpeed = 20; // Pixels per second
