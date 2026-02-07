@@ -42,6 +42,20 @@ export class Player {
     const pulse = Math.sin(this.pulsePhase) * 0.1 + 1;
     const currentSize = this.size * pulse;
 
+    // Calculate rotation angle if targeting an enemy
+    let rotationAngle = 0;
+    if (this.targetEnemy) {
+      // Calculate angle from player to target enemy
+      const dx = this.targetEnemy.x - this.x;
+      const dy = this.targetEnemy.y - this.y;
+      rotationAngle = Math.atan2(dy, dx) + Math.PI / 2; // +90° because ship points up by default
+    }
+
+    // Apply rotation transformation
+    ctx.translate(this.x, this.y);
+    ctx.rotate(rotationAngle);
+    ctx.translate(-this.x, -this.y);
+
     if (this.imageLoaded) {
       // Draw image with glow effect
       ctx.shadowBlur = 15;
