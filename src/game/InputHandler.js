@@ -13,16 +13,13 @@ export class InputHandler {
     this.hiddenInput = document.getElementById('hidden-input');
     this.soundManager = new SoundManager();
     this.lastInputLength = 0; // Track input length to detect new characters
+    this.musicStarted = false; // Track if background music has started
 
     console.log('InputHandler constructor called');
     console.log('Hidden input element:', this.hiddenInput);
 
-    // Load sounds and start background music
-    this.soundManager.loadSounds().then(() => {
-      // Play background music after sounds are loaded
-      this.soundManager.playBackground();
-      console.log('✅ Background music started');
-    });
+    // Load sounds (music will start on first user interaction)
+    this.soundManager.loadSounds();
 
     this.setupEventListeners();
 
@@ -31,6 +28,17 @@ export class InputHandler {
       console.log('✅ Input handler ready! JTK will handle phonetic conversion.');
     } else {
       console.error('❌ Hidden input not found!');
+    }
+  }
+
+  /**
+   * Start background music on first user interaction
+   */
+  startMusicOnInteraction() {
+    if (!this.musicStarted && this.soundManager.loaded) {
+      this.soundManager.playBackground();
+      this.musicStarted = true;
+      console.log('✅ Background music started on user interaction');
     }
   }
 
@@ -43,6 +51,9 @@ export class InputHandler {
     console.log('Setting up event listeners...');
 
     this.hiddenInput.addEventListener('keyup', (e) => {
+      // Start music on first interaction
+      this.startMusicOnInteraction();
+
       const value = e.target.value;
 
       console.log('KEYUP - Value:', value);
@@ -52,6 +63,9 @@ export class InputHandler {
     });
 
     this.hiddenInput.addEventListener('input', (e) => {
+      // Start music on first interaction
+      this.startMusicOnInteraction();
+
       const value = e.target.value;
 
       console.log('INPUT EVENT - Value:', value);
@@ -61,12 +75,18 @@ export class InputHandler {
     });
 
     document.addEventListener('click', () => {
+      // Start music on first click
+      this.startMusicOnInteraction();
+
       if (this.hiddenInput) {
         this.hiddenInput.focus();
       }
     });
 
     this.hiddenInput.addEventListener('keydown', (e) => {
+      // Start music on first keypress
+      this.startMusicOnInteraction();
+
       if (e.key === 'Escape') {
         this.clear();
         e.preventDefault();
