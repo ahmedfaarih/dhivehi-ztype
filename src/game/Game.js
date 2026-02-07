@@ -24,13 +24,32 @@ export class Game {
     this.wave = 1;
     this.gameOver = false;
     this.paused = false;
+    this.waveClear = false; // Wave clear screen state
+    this.waveStats = null; // Store stats for wave clear screen
 
     // Timing
     this.lastTime = 0;
     this.spawnTimer = 0;
-    this.spawnInterval = 4.0; // seconds between spawns (slowed down from 2.5)
-    this.waveTimer = 0;
-    this.waveDuration = 45; // seconds per wave (increased from 30)
+    this.spawnInterval = this.getSpawnIntervalForWave(this.wave); // seconds between enemy spawns
+    this.waveStartTime = Date.now(); // Track wave start time for WPM calculation
+
+    // Wave-based enemy system
+    this.enemiesSpawnedThisWave = 0;
+    this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
+
+    // Wave clear animation
+    this.waveClearAlpha = 0; // Fade opacity (0-1)
+    this.waveClearTimer = 0; // Time since wave clear started
+    this.waveClearDuration = 4.0; // Total duration to show wave clear (seconds)
+
+    // Cumulative statistics across all waves
+    this.totalStats = {
+      totalWavesCompleted: 0,
+      totalScore: 0,
+      totalCorrectInputs: 0,
+      totalIncorrectInputs: 0,
+      totalPlayTime: 0
+    };
 
     // Game objects
     this.player = new Player(this.width / 2, this.height - 80);
@@ -213,17 +232,40 @@ export class Game {
     const targetedEnemy = this.enemies.find(e => e.targeted);
     this.player.setTarget(targetedEnemy || null);
 
-    // Spawn enemies
-    this.spawnTimer += dt;
-    if (this.spawnTimer >= this.spawnInterval) {
-      this.spawnEnemy();
-      this.spawnTimer = 0;
-    }
+    // Handle wave clear animation and auto-transition
+    if (this.waveClear) {
+      this.waveClearTimer += dt;
 
-    // Wave progression
-    this.waveTimer += dt;
-    if (this.waveTimer >= this.waveDuration) {
-      this.nextWave();
+      // Fade in (first 0.5 seconds)
+      if (this.waveClearTimer < 0.5) {
+        this.waveClearAlpha = this.waveClearTimer / 0.5;
+      }
+      // Hold (middle duration)
+      else if (this.waveClearTimer < this.waveClearDuration - 0.5) {
+        this.waveClearAlpha = 1.0;
+      }
+      // Fade out (last 0.5 seconds)
+      else if (this.waveClearTimer < this.waveClearDuration) {
+        this.waveClearAlpha = (this.waveClearDuration - this.waveClearTimer) / 0.5;
+      }
+      // Auto-continue to next wave
+      else {
+        this.continueToNextWave();
+      }
+    } else {
+      // Spawn enemies one at a time until wave quota is met
+      this.spawnTimer += dt;
+      if (this.spawnTimer >= this.spawnInterval) {
+        if (this.enemiesSpawnedThisWave < this.totalEnemiesThisWave) {
+          this.spawnEnemy();
+          this.spawnTimer = 0;
+        }
+      }
+
+      // Check if wave is complete (all enemies destroyed)
+      if (this.enemiesSpawnedThisWave >= this.totalEnemiesThisWave && this.enemies.length === 0) {
+        this.showWaveClear();
+      }
     }
   }
 
@@ -275,6 +317,11 @@ export class Game {
     // Draw player
     this.player.draw(this.ctx);
 
+    // Draw wave clear screen
+    if (this.waveClear && this.waveStats) {
+      this.drawWaveClear();
+    }
+
     // Draw game over screen
     if (this.gameOver) {
       this.drawGameOver();
@@ -282,11 +329,38 @@ export class Game {
   }
 
   /**
+   * Get number of enemies for a specific wave
+   * @param {number} wave - Wave number
+   * @returns {number} Number of enemies to spawn
+   */
+  getEnemyCountForWave(wave) {
+    if (wave === 1) return 4;  // Wave 1: Easy start with 4 enemies
+    if (wave === 2) return 6;  // Wave 2: 6 enemies
+    if (wave === 3) return 8;  // Wave 3: 8 enemies
+    if (wave <= 5) return 10; // Waves 4-5: 10 enemies
+    if (wave <= 8) return 12; // Waves 6-8: 12 enemies
+    return 15; // Wave 9+: 15 enemies
+  }
+
+  /**
+   * Get spawn interval for a specific wave
+   * @param {number} wave - Wave number
+   * @returns {number} Seconds between spawns
+   */
+  getSpawnIntervalForWave(wave) {
+    if (wave === 1) return 6.0;  // Wave 1: Very slow (6 seconds)
+    if (wave === 2) return 4.5;  // Wave 2: Slower (4.5 seconds)
+    if (wave === 3) return 3.5;  // Wave 3: Medium (3.5 seconds)
+    if (wave <= 5) return 3.0;   // Waves 4-5: Normal (3 seconds)
+    if (wave <= 8) return 2.5;   // Waves 6-8: Faster (2.5 seconds)
+    return 2.0; // Wave 9+: Fast (2 seconds)
+  }
+
+  /**
    * Spawn a new enemy
    */
   spawnEnemy() {
     // Get word for current wave with progressive difficulty
-    // Word length increases as waves progress
     let maxLength = null;
 
     // Progressive word length based on wave
@@ -304,22 +378,89 @@ export class Game {
     // Random X position (avoid edges)
     const x = Math.random() * (this.width - 200) + 100;
 
-    // Speed increases with wave (slower progression)
-    const speed = 60 + this.wave * 3;
+    // Speed increases with wave but starts very slow for wave 1
+    let speed;
+    if (this.wave === 1) {
+      speed = 20; // Very slow for wave 1
+    } else if (this.wave === 2) {
+      speed = 25; // Slow for wave 2
+    } else {
+      speed = 30 + (this.wave - 2) * 5; // Progressive speed increase
+    }
 
     const enemy = new Enemy(word, x, -50, speed, this.player);
     this.enemies.push(enemy);
+
+    // Increment spawn counter
+    this.enemiesSpawnedThisWave++;
+  }
+
+
+  /**
+   * Show wave clear screen with statistics
+   */
+  showWaveClear() {
+    // Calculate wave duration in minutes
+    const waveEndTime = Date.now();
+    const waveDurationMs = waveEndTime - this.waveStartTime;
+    const waveDurationMinutes = waveDurationMs / 60000;
+
+    // Get typing statistics from input handler
+    const stats = this.input.getStatistics();
+
+    // Calculate WPM (words = characters / 5)
+    const words = stats.correctInputs / 5;
+    const wpm = waveDurationMinutes > 0 ? Math.round(words / waveDurationMinutes) : 0;
+
+    // Accumulate stats across waves
+    this.totalStats.totalWavesCompleted++;
+    this.totalStats.totalScore = this.score;
+    this.totalStats.totalCorrectInputs += stats.correctInputs;
+    this.totalStats.totalIncorrectInputs += stats.incorrectInputs;
+    this.totalStats.totalPlayTime += waveDurationMs;
+
+    // Store stats for display
+    this.waveStats = {
+      wave: this.wave,
+      score: this.score,
+      wpm: wpm,
+      accuracy: stats.accuracy,
+      correctInputs: stats.correctInputs,
+      incorrectInputs: stats.incorrectInputs
+    };
+
+    // Start wave clear animation (don't pause game)
+    this.waveClear = true;
+    this.waveClearTimer = 0;
+    this.waveClearAlpha = 0;
+
+    // Clear all enemies from screen
+    this.enemies = [];
   }
 
   /**
-   * Progress to next wave
+   * Continue to next wave after wave clear screen
    */
-  nextWave() {
+  continueToNextWave() {
     this.wave++;
-    this.waveTimer = 0;
+    this.waveStartTime = Date.now();
 
-    // Increase difficulty (slower progression)
-    this.spawnInterval = Math.max(2.0, this.spawnInterval - 0.15);
+    // Reset wave-specific counters
+    this.enemiesSpawnedThisWave = 0;
+    this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
+    this.spawnTimer = 0;
+
+    // Reset statistics for new wave
+    this.input.resetStatistics();
+
+    // Update spawn interval for new wave
+    this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
+
+    // Reset wave clear animation
+    this.waveClear = false;
+    this.waveStats = null;
+    this.waveClearTimer = 0;
+    this.waveClearAlpha = 0;
 
     this.updateUI();
     this.playSound('wave');
@@ -404,36 +545,133 @@ export class Game {
   }
 
   /**
+   * Draw wave clear screen with statistics (subtle overlay with fade)
+   */
+  drawWaveClear() {
+    this.ctx.save();
+
+    // Apply global alpha for fade effect
+    this.ctx.globalAlpha = this.waveClearAlpha;
+
+    // Subtle semi-transparent overlay
+    this.ctx.fillStyle = 'rgba(0, 15, 30, 0.6)'; // Dark blue space theme
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
+
+    // Wave clear text with glow
+    this.ctx.fillStyle = '#00ff88';
+    this.ctx.font = 'bold 40px Arial, sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = '#00ff8866';
+
+    const waveText = `WAVE ${String(this.waveStats.wave).padStart(3, '0')} CLEAR`;
+    this.ctx.fillText(waveText, centerX, centerY - 120);
+
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '26px Arial, sans-serif';
+    this.ctx.shadowBlur = 8;
+    this.ctx.shadowColor = '#ffffff44';
+    this.ctx.fillText(`SCORE: ${String(this.waveStats.score).padStart(6, '0')}`, centerX, centerY - 70);
+
+    const boxY = centerY - 20;
+    const lineHeight = 38;
+
+    this.ctx.fillStyle = '#00bbff';
+    this.ctx.font = '24px Arial, sans-serif';
+    this.ctx.shadowBlur = 8;
+    this.ctx.shadowColor = '#00bbff44';
+    this.ctx.fillText(`WPM: ${this.waveStats.wpm}`, centerX, boxY);
+
+    // Accuracy
+    this.ctx.fillStyle = this.waveStats.accuracy >= 90 ? '#00ff88' :
+                         this.waveStats.accuracy >= 70 ? '#ffaa00' : '#ff4466';
+    this.ctx.fillText(`ACCURACY: ${this.waveStats.accuracy}%`, centerX, boxY + lineHeight);
+
+    this.ctx.fillStyle = '#aaaaaa';
+    this.ctx.font = '20px Arial, sans-serif';
+    this.ctx.shadowBlur = 5;
+    this.ctx.fillText(
+      `Correct: ${this.waveStats.correctInputs} | Errors: ${this.waveStats.incorrectInputs}`,
+      centerX,
+      boxY + lineHeight * 2
+    );
+
+    this.ctx.restore();
+  }
+
+  /**
    * Draw game over screen
    */
   drawGameOver() {
     this.ctx.save();
 
     // Semi-transparent overlay
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
     this.ctx.fillRect(0, 0, this.width, this.height);
+
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
 
     // Game Over text
     this.ctx.fillStyle = '#ff4466';
-    this.ctx.font = 'bold 64px "MV Waheed", Arial, sans-serif';
+    this.ctx.font = 'bold 64px Arial, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.shadowBlur = 20;
     this.ctx.shadowColor = '#ff4466';
-    this.ctx.fillText('GAME OVER', this.width / 2, this.height / 2 - 50);
+    this.ctx.fillText('GAME OVER', centerX, centerY - 160);
 
-    // Final score
+    // Final statistics
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '32px "MV Waheed", Arial, sans-serif';
+    this.ctx.font = '32px Arial, sans-serif';
     this.ctx.shadowBlur = 10;
     this.ctx.shadowColor = '#ffffff';
-    this.ctx.fillText(`Final Score: ${this.score}`, this.width / 2, this.height / 2 + 20);
-    this.ctx.fillText(`Wave: ${this.wave}`, this.width / 2, this.height / 2 + 60);
+    this.ctx.fillText(`FINAL SCORE: ${String(this.score).padStart(6, '0')}`, centerX, centerY - 90);
+
+    // Total waves completed
+    this.ctx.font = '28px Arial, sans-serif';
+    this.ctx.fillText(`Waves Completed: ${this.totalStats.totalWavesCompleted}`, centerX, centerY - 40);
+
+    // Calculate overall accuracy
+    const totalInputs = this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs;
+    const overallAccuracy = totalInputs > 0
+      ? Math.round((this.totalStats.totalCorrectInputs / totalInputs) * 100)
+      : 100;
+
+    // Calculate overall WPM
+    const totalMinutes = this.totalStats.totalPlayTime / 60000;
+    const totalWords = this.totalStats.totalCorrectInputs / 5;
+    const overallWPM = totalMinutes > 0 ? Math.round(totalWords / totalMinutes) : 0;
+
+    // Overall WPM
+    this.ctx.fillStyle = '#00bbff';
+    this.ctx.font = '26px Arial, sans-serif';
+    this.ctx.fillText(`Overall WPM: ${overallWPM}`, centerX, centerY + 10);
+
+    // Overall Accuracy
+    this.ctx.fillStyle = overallAccuracy >= 90 ? '#00ff88' :
+                         overallAccuracy >= 70 ? '#ffaa00' : '#ff4466';
+    this.ctx.fillText(`Overall Accuracy: ${overallAccuracy}%`, centerX, centerY + 50);
+
+    // Total correct/incorrect
+    this.ctx.fillStyle = '#cccccc';
+    this.ctx.font = '22px Arial, sans-serif';
+    this.ctx.fillText(
+      `Total Correct: ${this.totalStats.totalCorrectInputs} | Errors: ${this.totalStats.totalIncorrectInputs}`,
+      centerX,
+      centerY + 90
+    );
 
     // Restart instruction
     this.ctx.fillStyle = '#00bbff';
-    this.ctx.font = '24px "MV Waheed", Arial, sans-serif';
-    this.ctx.fillText('Press R to Restart', this.width / 2, this.height / 2 + 120);
+    this.ctx.font = 'bold 26px Arial, sans-serif';
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = '#00bbff';
+    this.ctx.fillText('Press R to Restart', centerX, centerY + 150);
 
     this.ctx.restore();
   }
@@ -499,9 +737,29 @@ export class Game {
     this.score = 0;
     this.wave = 1;
     this.gameOver = false;
+    this.waveClear = false;
+    this.waveStats = null;
     this.spawnTimer = 0;
-    this.waveTimer = 0;
-    this.spawnInterval = 4.0;
+    this.waveStartTime = Date.now();
+    this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
+
+    // Reset wave-based enemy system
+    this.enemiesSpawnedThisWave = 0;
+    this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
+
+    // Reset wave clear animation
+    this.waveClearAlpha = 0;
+    this.waveClearTimer = 0;
+
+    // Reset cumulative stats
+    this.totalStats = {
+      totalWavesCompleted: 0,
+      totalScore: 0,
+      totalCorrectInputs: 0,
+      totalIncorrectInputs: 0,
+      totalPlayTime: 0
+    };
+
     this.enemies = [];
     this.bullets = [];
     this.player.lives = this.player.maxLives;
@@ -510,5 +768,6 @@ export class Game {
     this.particles.createStarfield(150);
     this.updateUI();
     this.input.clear();
+    this.input.resetStatistics();
   }
 }

@@ -7,8 +7,8 @@ export class Player {
     this.y = y;
     this.size = 40; // Increased for image
     this.color = '#00bbff';
-    this.lives = 3;
-    this.maxLives = 3;
+    this.lives = 5;
+    this.maxLives = 5;
 
     // Load ship image
     this.image = new Image();

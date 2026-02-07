@@ -49,6 +49,11 @@ export class Enemy {
     this.hitDuration = 0.2; // 200ms flash
     this.hitShakeX = 0;
     this.hitShakeY = 0;
+
+    // Horizontal movement and bouncing
+    this.velocityX = (Math.random() - 0.5) * 60; // Random horizontal velocity (-30 to 30)
+    this.minX = 50; // Left boundary
+    this.maxX = 1150; // Right boundary (assume 1200px width)
   }
 
   /**
@@ -64,22 +69,20 @@ export class Enemy {
       return;
     }
 
-    // Move toward player if player exists, otherwise just move down
-    if (this.player) {
-      // Calculate direction to player
-      const dx = this.player.x - this.x;
-      const dy = this.player.y - this.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+    // Move horizontally with bouncing
+    this.x += this.velocityX * deltaTime;
 
-      if (distance > 0) {
-        // Normalize and apply speed
-        this.x += (dx / distance) * this.speed * deltaTime * 0.5; // 50% horizontal speed
-        this.y += (dy / distance) * this.speed * deltaTime;
-      }
-    } else {
-      // Move down if no player reference
-      this.y += this.speed * deltaTime;
+    // Bounce off edges
+    if (this.x <= this.minX) {
+      this.x = this.minX;
+      this.velocityX = Math.abs(this.velocityX); // Reverse direction (bounce right)
+    } else if (this.x >= this.maxX) {
+      this.x = this.maxX;
+      this.velocityX = -Math.abs(this.velocityX); // Reverse direction (bounce left)
     }
+
+    // Move down slowly
+    this.y += this.speed * deltaTime * 0.6; // Slower downward movement
 
     // Pulse animation
     this.pulsePhase += deltaTime * 3;

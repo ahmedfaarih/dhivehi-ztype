@@ -15,6 +15,11 @@ export class InputHandler {
     this.lastInputLength = 0; // Track input length to detect new characters
     this.musicStarted = false; // Track if background music has started
 
+    // Statistics tracking
+    this.correctInputs = 0;
+    this.incorrectInputs = 0;
+    this.totalCharactersTyped = 0;
+
     // Load sounds (music will start on first user interaction)
     this.soundManager.loadSounds();
 
@@ -106,6 +111,10 @@ export class InputHandler {
         this.currentInput = newValue;
         this.soundManager.playShotgun();
 
+        // Track statistics
+        this.correctInputs++;
+        this.totalCharactersTyped++;
+
         // Fire bullet at the enemy
         this.game.fireBullet(targetedEnemy);
 
@@ -117,11 +126,15 @@ export class InputHandler {
 
         this.checkMatches();
       } else {
-        // Invalid input - reject it
+        // Invalid input - reject it and clear input field
         this.soundManager.playEmpty();
 
-        // Revert the input field to the previous valid state
-        this.hiddenInput.value = this.currentInput;
+        // Track error
+        this.incorrectInputs++;
+        this.totalCharactersTyped++;
+
+        // Clear the input completely to let user start fresh
+        this.clear();
       }
     } else {
       // No locked target - accept any input and try to find a match
@@ -234,6 +247,31 @@ export class InputHandler {
    */
   getCurrentInput() {
     return this.currentInput;
+  }
+
+  /**
+   * Get current typing statistics
+   */
+  getStatistics() {
+    const accuracy = this.totalCharactersTyped > 0
+      ? Math.round((this.correctInputs / this.totalCharactersTyped) * 100)
+      : 100;
+
+    return {
+      correctInputs: this.correctInputs,
+      incorrectInputs: this.incorrectInputs,
+      totalCharactersTyped: this.totalCharactersTyped,
+      accuracy: accuracy
+    };
+  }
+
+  /**
+   * Reset statistics for new wave
+   */
+  resetStatistics() {
+    this.correctInputs = 0;
+    this.incorrectInputs = 0;
+    this.totalCharactersTyped = 0;
   }
 
   /**
