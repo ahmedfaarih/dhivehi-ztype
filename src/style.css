@@ -1,14 +1,16 @@
 @font-face {
-  font-family: 'Waheed';
+  font-family: 'A_Waheed';
   src: url('./fonts/A_Waheed/avas3_.TTF') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap; /* Show fallback font while loading, then swap to A_Waheed */
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 body {
@@ -16,7 +18,11 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: #000;
-  font-family: 'Waheed', Arial, sans-serif;
+  font-family: 'A_Waheed', Arial, sans-serif;
+}
+
+html {
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 #game-container {
@@ -39,7 +45,8 @@ body {
   top: 20px;
   right: 20px;
   color: #fff;
-  font-size: 20px;
+  font-size: 24px;
+  font-family: 'A_Waheed', Arial, sans-serif;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
   z-index: 10;
@@ -49,14 +56,17 @@ body {
 #ui-overlay > div {
   margin-bottom: 15px;
   font-weight: bold;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 #score {
   color: #00ff88;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 #wave {
   color: #00bbff;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 #health-container {
@@ -118,7 +128,7 @@ body {
   padding: 15px 25px;
   font-size: 28px;
   direction: rtl;
-  font-family: 'Waheed', Arial, sans-serif;
+  font-family: 'A_Waheed', Arial, sans-serif;
   background: rgba(0, 0, 0, 0.7);
   border: 2px solid rgba(0, 187, 255, 0.6);
   border-radius: 8px;
@@ -136,11 +146,11 @@ body {
 
 #hidden-input::placeholder {
   color: rgba(255, 255, 255, 0.3);
-  font-family: 'Waheed', Arial, sans-serif;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
 
 /* JTK Thaana input styling */
 .thaanaKeyboardInput {
   direction: rtl;
-  font-family: 'Waheed', Arial, sans-serif;
+  font-family: 'A_Waheed', Arial, sans-serif;
 }
