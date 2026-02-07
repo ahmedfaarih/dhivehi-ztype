@@ -170,7 +170,7 @@ export class Enemy {
     // Draw word above ship (only remaining untyped characters)
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '20px "A_Waheed", Arial, sans-serif'; // Smaller font
+    ctx.font = '20px "MV Waheed", Arial, sans-serif'; // Smaller font
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 

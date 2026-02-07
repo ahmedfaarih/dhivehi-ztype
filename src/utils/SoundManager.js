@@ -39,7 +39,6 @@ export class SoundManager {
       ]);
 
       this.loaded = true;
-      console.log('✅ Sounds loaded successfully!');
     } catch (error) {
       console.error('Error loading sounds:', error);
     }
@@ -85,7 +84,7 @@ export class SoundManager {
 
     try {
       this.sounds.background.play().catch(error => {
-        console.log('Background music autoplay blocked. Will play on user interaction.');
+        // Background music autoplay blocked. Will play on user interaction.
       });
     } catch (error) {
       console.error('Error playing background music:', error);

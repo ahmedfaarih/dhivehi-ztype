@@ -56,7 +56,6 @@ export class Game {
     this.backgroundScrollSpeed = 20; // Pixels per second
     this.backgroundImage.onload = () => {
       this.backgroundImageLoaded = true;
-      console.log('✅ Background image loaded');
     };
 
     // Font loading
@@ -74,17 +73,14 @@ export class Game {
     try {
       // Check if the browser supports the Font Loading API
       if ('fonts' in document) {
-        // Load the A_Waheed font
-        await document.fonts.load('20px "A_Waheed"');
+        // Load the MV Waheed font
+        await document.fonts.load('20px "MV Waheed"');
         this.fontLoaded = true;
-        console.log('✅ A_Waheed font loaded and ready');
       } else {
         // Fallback for older browsers - assume font loads via CSS
         this.fontLoaded = true;
-        console.log('⚠️ Font Loading API not supported, using CSS fallback');
       }
     } catch (error) {
-      console.error('Error loading A_Waheed font:', error);
       this.fontLoaded = true; // Continue anyway with fallback
     }
   }
@@ -133,7 +129,7 @@ export class Game {
     try {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     } catch (e) {
-      console.warn('Web Audio API not supported', e);
+      // Web Audio API not supported
     }
   }
 
@@ -406,7 +402,7 @@ export class Game {
 
     // Game Over text
     this.ctx.fillStyle = '#ff4466';
-    this.ctx.font = 'bold 64px "A_Waheed", Arial, sans-serif';
+    this.ctx.font = 'bold 64px "MV Waheed", Arial, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.shadowBlur = 20;
@@ -415,7 +411,7 @@ export class Game {
 
     // Final score
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '32px "A_Waheed", Arial, sans-serif';
+    this.ctx.font = '32px "MV Waheed", Arial, sans-serif';
     this.ctx.shadowBlur = 10;
     this.ctx.shadowColor = '#ffffff';
     this.ctx.fillText(`Final Score: ${this.score}`, this.width / 2, this.height / 2 + 20);
@@ -423,7 +419,7 @@ export class Game {
 
     // Restart instruction
     this.ctx.fillStyle = '#00bbff';
-    this.ctx.font = '24px "A_Waheed", Arial, sans-serif';
+    this.ctx.font = '24px "MV Waheed", Arial, sans-serif';
     this.ctx.fillText('Press R to Restart', this.width / 2, this.height / 2 + 120);
 
     this.ctx.restore();
