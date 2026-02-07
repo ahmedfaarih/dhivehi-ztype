@@ -1,5 +1,6 @@
 import './style.css';
 import { Game } from './game/Game.js';
+import { getWordStats } from './data/words.js';
 
 /**
  * Main entry point for Dhivehi Type game
@@ -39,6 +40,10 @@ async function init() {
 
   // Wait for font to be loaded before starting game
   await waitForFont();
+
+  // Log word loading stats
+  const wordStats = getWordStats();
+  console.log('📚 Word files loaded:', wordStats.totalFiles, 'files (', wordStats.fileRange, ')');
 
   game = new Game(canvas);
 

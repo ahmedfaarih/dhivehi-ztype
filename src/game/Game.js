@@ -3,7 +3,7 @@ import { Enemy } from './Enemy.js';
 import { InputHandler } from './InputHandler.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { Bullet } from './Bullet.js';
-import { getRandomWord, getDifficultyForWave } from '../data/words.js';
+import { getRandomWord } from '../data/words.js';
 import backgroundImageUrl from '../images/bg_space_seamless.png';
 
 /**
@@ -285,8 +285,21 @@ export class Game {
    * Spawn a new enemy
    */
   spawnEnemy() {
-    const difficulty = getDifficultyForWave(this.wave);
-    const word = getRandomWord(difficulty);
+    // Get word for current wave with progressive difficulty
+    // Word length increases as waves progress
+    let maxLength = null;
+
+    // Progressive word length based on wave
+    if (this.wave <= 3) {
+      maxLength = 5; // Waves 1-3: Short words (3-5 letters)
+    } else if (this.wave <= 6) {
+      maxLength = 8; // Waves 4-6: Medium words (3-8 letters)
+    } else if (this.wave <= 10) {
+      maxLength = 12; // Waves 7-10: Longer words (3-12 letters)
+    }
+    // Wave 11+: No limit, all word lengths allowed
+
+    const word = getRandomWord(this.wave, maxLength);
 
     // Random X position (avoid edges)
     const x = Math.random() * (this.width - 200) + 100;
