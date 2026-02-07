@@ -17,8 +17,12 @@ export class InputHandler {
     console.log('InputHandler constructor called');
     console.log('Hidden input element:', this.hiddenInput);
 
-    // Load sounds
-    this.soundManager.loadSounds();
+    // Load sounds and start background music
+    this.soundManager.loadSounds().then(() => {
+      // Play background music after sounds are loaded
+      this.soundManager.playBackground();
+      console.log('✅ Background music started');
+    });
 
     this.setupEventListeners();
 

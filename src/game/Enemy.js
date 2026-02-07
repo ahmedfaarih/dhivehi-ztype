@@ -1,4 +1,3 @@
-import enemyShipUrl from '../images/badship.png';
 import explosionGifUrl from '../images/blow.gif';
 
 /**
@@ -20,7 +19,7 @@ export class Enemy {
 
     // Load ship image
     this.image = new Image();
-    this.image.src = enemyShipUrl;
+    this.image.src = '/images/badship.png';
     this.imageLoaded = false;
     this.image.onload = () => {
       this.imageLoaded = true;

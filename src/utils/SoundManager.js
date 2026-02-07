@@ -1,3 +1,7 @@
+import shotgunSoundUrl from '../sounds/shotgun.wav';
+import emptySoundUrl from '../sounds/empty.wav';
+import backgroundSoundUrl from '../sounds/backgroud-sound.wav';
+
 /**
  * Sound Manager for loading and playing game sounds
  */
@@ -6,6 +10,7 @@ export class SoundManager {
     this.sounds = {};
     this.loaded = false;
     this.volume = 0.5; // Default volume (0.0 to 1.0)
+    this.backgroundVolume = 0.3; // Lower volume for background music
   }
 
   /**
@@ -14,17 +19,23 @@ export class SoundManager {
   async loadSounds() {
     try {
       // Load shotgun sound (correct typing)
-      this.sounds.shotgun = new Audio('/src/sounds/shotgun.wav');
+      this.sounds.shotgun = new Audio(shotgunSoundUrl);
       this.sounds.shotgun.volume = this.volume;
 
       // Load empty sound (incorrect typing)
-      this.sounds.empty = new Audio('/src/sounds/empty.wav');
+      this.sounds.empty = new Audio(emptySoundUrl);
       this.sounds.empty.volume = this.volume * 0.7; // Slightly quieter
+
+      // Load background music
+      this.sounds.background = new Audio(backgroundSoundUrl);
+      this.sounds.background.volume = this.backgroundVolume;
+      this.sounds.background.loop = true; // Loop the background music
 
       // Preload the audio
       await Promise.all([
         this.sounds.shotgun.load(),
-        this.sounds.empty.load()
+        this.sounds.empty.load(),
+        this.sounds.background.load()
       ]);
 
       this.loaded = true;
@@ -67,6 +78,31 @@ export class SoundManager {
   }
 
   /**
+   * Play background music (looping)
+   */
+  playBackground() {
+    if (!this.loaded || !this.sounds.background) return;
+
+    try {
+      this.sounds.background.play().catch(error => {
+        console.log('Background music autoplay blocked. Will play on user interaction.');
+      });
+    } catch (error) {
+      console.error('Error playing background music:', error);
+    }
+  }
+
+  /**
+   * Stop background music
+   */
+  stopBackground() {
+    if (this.sounds.background) {
+      this.sounds.background.pause();
+      this.sounds.background.currentTime = 0;
+    }
+  }
+
+  /**
    * Set volume for all sounds
    * @param {number} volume - Volume level (0.0 to 1.0)
    */
@@ -74,5 +110,14 @@ export class SoundManager {
     this.volume = Math.max(0, Math.min(1, volume));
     if (this.sounds.shotgun) this.sounds.shotgun.volume = this.volume;
     if (this.sounds.empty) this.sounds.empty.volume = this.volume * 0.7;
+  }
+
+  /**
+   * Set background music volume
+   * @param {number} volume - Volume level (0.0 to 1.0)
+   */
+  setBackgroundVolume(volume) {
+    this.backgroundVolume = Math.max(0, Math.min(1, volume));
+    if (this.sounds.background) this.sounds.background.volume = this.backgroundVolume;
   }
 }

@@ -24,20 +24,15 @@ export const words = {
     'ފަރު',      // Faru (reef)
     'ފެން',      // Fen (water)
     'ކައްކާ',    // Kakka (eat)
-    'ބުއްޓި',    // Butti (chicken)
     'މަސް',      // Mas (fish)
-    'ކިރު',      // Kiru (milk)
     'ބަތް',      // Bath (rice)
     'ރޮށި',      // Roshi (bread)
     'ހުސް',      // Hus (empty)
     'ފުރާ',      // Furaa (full)
-    'އުދު',      // Udu (fly)
     'ދުރު',      // Dhuru (far)
     'ހިތް',      // Hith (heart)
-    'ބޮލް',      // Bol (head)
     'ފައި',      // Fai (foot)
-    'އަތް',      // Ath (hand)
-    'ލޮލް',      // Lol (eye)
+    'އަތް',  
   ],
 
   medium: [
