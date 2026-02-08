@@ -464,6 +464,39 @@ html {
   color: #d57b7b;
 }
 
+.login-register-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background: linear-gradient(135deg, rgba(91, 213, 155, 0.25) 0%, rgba(91, 213, 155, 0.35) 100%);
+  border: 2px solid rgba(91, 213, 155, 0.5);
+  border-radius: 8px;
+  color: #7bd1a8;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Orbitron', Arial, sans-serif;
+}
+
+.login-register-btn:hover {
+  background: linear-gradient(135deg, rgba(91, 213, 155, 0.35) 0%, rgba(91, 213, 155, 0.45) 100%);
+  border-color: #5bd19b;
+  box-shadow: 0 4px 15px rgba(91, 213, 155, 0.3);
+  transform: translateY(-2px);
+  color: #5bd19b;
+}
+
+.login-register-btn:active {
+  transform: translateY(0);
+}
+
+.login-register-btn.hidden {
+  display: none;
+}
+
 .view-leaderboard-btn {
   width: 100%;
   padding: 14px;
@@ -563,6 +596,44 @@ html {
   font-family: 'Orbitron', Arial, sans-serif;
 }
 
+/* ==================== Auth Tabs ==================== */
+
+.auth-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  justify-content: center;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(91, 155, 213, 0.3);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Orbitron', Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.auth-tab:hover {
+  background: rgba(91, 155, 213, 0.1);
+  border-color: rgba(91, 155, 213, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.auth-tab.active {
+  background: linear-gradient(135deg, rgba(91, 155, 213, 0.3) 0%, rgba(91, 155, 213, 0.2) 100%);
+  border-color: #5b9bd5;
+  color: #5b9bd5;
+  box-shadow: 0 0 20px rgba(91, 155, 213, 0.3);
+}
+
 /* ==================== Auth Form Styles ==================== */
 
 .auth-form {
@@ -571,9 +642,10 @@ html {
   gap: 15px;
 }
 
-#username-input {
+#username-input,
+#password-input {
   padding: 16px 24px;
-  font-size: 20px;
+  font-size: 18px;
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid rgba(91, 155, 213, 0.6);
   border-radius: 12px;
@@ -585,7 +657,8 @@ html {
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-#username-input:focus {
+#username-input:focus,
+#password-input:focus {
   border-color: #5b9bd5;
   box-shadow:
     0 0 20px rgba(91, 155, 213, 0.4),
@@ -593,7 +666,8 @@ html {
   transform: scale(1.02);
 }
 
-#username-input::placeholder {
+#username-input::placeholder,
+#password-input::placeholder {
   color: rgba(255, 255, 255, 0.4);
   font-family: 'Orbitron', Arial, sans-serif;
 }
@@ -777,7 +851,7 @@ html {
 .scores-header,
 .score-row {
   display: grid;
-  grid-template-columns: 60px 1fr 100px 60px 60px 60px;
+  grid-template-columns: 60px 1fr 100px 60px 60px 60px 60px;
   gap: 10px;
   padding: 12px;
   align-items: center;
@@ -833,7 +907,8 @@ html {
 
 .col-wave,
 .col-wpm,
-.col-acc {
+.col-acc,
+.col-games {
   text-align: center;
   font-size: 13px;
   opacity: 0.9;
@@ -851,6 +926,40 @@ html {
 
 .error {
   color: #d57b7b;
+}
+
+/* ==================== Confirm Modal ==================== */
+
+.confirm-modal-content {
+  max-width: 400px;
+  padding: 35px;
+  text-align: center;
+}
+
+.confirm-modal-content h2 {
+  font-size: 26px;
+  margin-bottom: 15px;
+}
+
+.confirm-modal-content p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  font-family: 'Orbitron', Arial, sans-serif;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirm-buttons .btn-primary,
+.confirm-buttons .btn-secondary {
+  min-width: 110px;
+  padding: 14px 28px;
+  font-size: 15px;
 }
 
 /* ==================== User Stats Panel ==================== */

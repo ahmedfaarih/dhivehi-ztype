@@ -1,3 +1,5 @@
+import { ConfirmModal } from './ConfirmModal.js';
+
 /**
  * Live scoreboard that shows top 5 scores during gameplay
  */
@@ -6,6 +8,7 @@ export class LiveScoreboard {
     this.firebaseService = firebaseService;
     this.container = null;
     this.refreshInterval = null;
+    this.confirmModal = new ConfirmModal();
 
     this.createScoreboard();
     this.startAutoRefresh();
@@ -36,24 +39,43 @@ export class LiveScoreboard {
       <div class="live-scoreboard-list" id="live-scoreboard-list">
         <div class="loading-scores">Loading...</div>
       </div>
+      <button id="login-register-btn" class="login-register-btn hidden">
+        Login / Register
+      </button>
       <button id="view-full-leaderboard-btn" class="view-leaderboard-btn">
         View Full Leaderboard
       </button>
     `;
 
     this.updateLoginPrompt();
-    this.setupLeaderboardButton();
+    this.setupButtons();
   }
 
   /**
-   * Setup leaderboard button click handler
+   * Setup button click handlers
    */
-  setupLeaderboardButton() {
-    const btn = document.getElementById('view-full-leaderboard-btn');
-    if (btn) {
-      btn.addEventListener('click', () => {
+  setupButtons() {
+    // Leaderboard button
+    const leaderboardBtn = document.getElementById('view-full-leaderboard-btn');
+    if (leaderboardBtn) {
+      leaderboardBtn.addEventListener('click', () => {
         if (window.showScoreboard) {
           window.showScoreboard();
+        }
+      });
+    }
+
+    // Login/Register button
+    const loginRegisterBtn = document.getElementById('login-register-btn');
+    if (loginRegisterBtn) {
+      loginRegisterBtn.addEventListener('click', () => {
+        if (window.showAuthUI) {
+          window.showAuthUI((success) => {
+            if (success) {
+              this.updateLoginPrompt();
+              this.loadScores();
+            }
+          });
         }
       });
     }
@@ -78,10 +100,12 @@ export class LiveScoreboard {
   updateLoginPrompt() {
     const loginPrompt = document.getElementById('login-prompt');
     const userStatus = document.getElementById('user-status');
+    const loginRegisterBtn = document.getElementById('login-register-btn');
     if (!loginPrompt || !userStatus) return;
 
     if (this.firebaseService.isLoggedIn()) {
       loginPrompt.classList.add('hidden');
+      if (loginRegisterBtn) loginRegisterBtn.classList.add('hidden');
 
       // Show user status with logout button
       const username = this.firebaseService.getCurrentUsername();
@@ -97,7 +121,11 @@ export class LiveScoreboard {
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-          if (confirm('Are you sure you want to logout?')) {
+          const confirmed = await this.confirmModal.show(
+            'Are you sure you want to logout? Your local session will end.',
+            'Logout Confirmation'
+          );
+          if (confirmed) {
             await this.firebaseService.logout();
             this.updateLoginPrompt();
             this.loadScores();
@@ -106,6 +134,7 @@ export class LiveScoreboard {
       }
     } else {
       loginPrompt.classList.remove('hidden');
+      if (loginRegisterBtn) loginRegisterBtn.classList.remove('hidden');
       userStatus.innerHTML = '';
       userStatus.classList.add('hidden');
     }

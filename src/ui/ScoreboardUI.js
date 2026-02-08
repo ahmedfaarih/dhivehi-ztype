@@ -93,10 +93,23 @@ export class ScoreboardUI {
    * Switch between tabs
    */
   async switchTab(tab) {
-    if (tab === 'global') {
-      await this.loadGlobalScores();
-    } else if (tab === 'personal') {
-      this.loadPersonalScores();
+    try {
+      if (tab === 'global') {
+        await this.loadGlobalScores();
+      } else if (tab === 'personal') {
+        await this.loadPersonalScores();
+      }
+    } catch (error) {
+      console.error('Error switching tabs:', error);
+      // Ensure loading is hidden even on error
+      const loadingDiv = document.getElementById('scoreboard-loading');
+      if (loadingDiv) {
+        loadingDiv.classList.add('hidden');
+      }
+      const listDiv = document.getElementById('scoreboard-list');
+      if (listDiv) {
+        listDiv.innerHTML = '<div class="error">Failed to load scores</div>';
+      }
     }
   }
 
@@ -108,7 +121,16 @@ export class ScoreboardUI {
     this.isOpen = true;
 
     // Load global scores by default
-    await this.loadGlobalScores();
+    try {
+      await this.loadGlobalScores();
+    } catch (error) {
+      console.error('Error showing scoreboard:', error);
+      // Ensure loading is hidden even on error
+      const loadingDiv = document.getElementById('scoreboard-loading');
+      if (loadingDiv) {
+        loadingDiv.classList.add('hidden');
+      }
+    }
   }
 
   /**
@@ -123,31 +145,50 @@ export class ScoreboardUI {
    * Load global scores from Firebase
    */
   async loadGlobalScores() {
+    console.log('📊 Loading global scores...');
     const listDiv = document.getElementById('scoreboard-list');
     const loadingDiv = document.getElementById('scoreboard-loading');
 
+    if (!listDiv || !loadingDiv) {
+      console.error('❌ Scoreboard elements not found!');
+      return;
+    }
+
     // Show loading
+    console.log('🔄 Showing loading spinner');
     loadingDiv.classList.remove('hidden');
+    loadingDiv.style.display = 'block';
     listDiv.innerHTML = '';
 
     try {
+      // Get scores (removed timeout - let it load naturally)
       const scores = await this.firebaseService.getLeaderboard(10);
 
-      // Hide loading
-      loadingDiv.classList.add('hidden');
+      console.log(`✅ Loaded ${scores ? scores.length : 0} scores`);
 
-      if (scores.length === 0) {
+      // Force hide loading
+      console.log('✅ Hiding loading spinner');
+      loadingDiv.classList.add('hidden');
+      loadingDiv.style.display = 'none';
+
+      if (!scores || scores.length === 0) {
         listDiv.innerHTML = '<div class="no-scores">No scores yet. Be the first!</div>';
         return;
       }
 
       // Render scores
       listDiv.innerHTML = this.renderScoresList(scores, true);
+      console.log('✅ Scores rendered');
 
     } catch (error) {
-      console.error('Failed to load scores:', error);
+      console.error('❌ Failed to load scores:', error);
+
+      // Force hide loading even on error
+      console.log('⚠️ Hiding loading spinner (error path)');
       loadingDiv.classList.add('hidden');
-      listDiv.innerHTML = '<div class="error">Failed to load scores</div>';
+      loadingDiv.style.display = 'none';
+
+      listDiv.innerHTML = '<div class="error">Failed to load scores. Please try again.</div>';
     }
   }
 
@@ -155,62 +196,104 @@ export class ScoreboardUI {
    * Load personal best scores and stats
    */
   async loadPersonalScores() {
+    console.log('👤 Loading personal scores...');
     const listDiv = document.getElementById('scoreboard-list');
+    const loadingDiv = document.getElementById('scoreboard-loading');
     const currentUsername = this.firebaseService.getCurrentUsername();
 
+    if (!listDiv || !loadingDiv) {
+      console.error('❌ Scoreboard elements not found!');
+      return;
+    }
+
+    // Show loading
+    console.log('🔄 Showing loading spinner');
+    loadingDiv.classList.remove('hidden');
+    loadingDiv.style.display = 'block';
+    listDiv.innerHTML = '';
+
     if (!currentUsername) {
+      console.log('⚠️ No user logged in');
+      loadingDiv.classList.add('hidden');
+      loadingDiv.style.display = 'none';
       listDiv.innerHTML = '<div class="no-scores">Login to see your scores</div>';
       return;
     }
 
-    // Get user stats
-    const stats = await this.firebaseService.getUserStats();
+    console.log(`👤 Loading scores for user: ${currentUsername}`);
 
-    // Get local scores for this user
-    const allScores = JSON.parse(localStorage.getItem('dhivehi_type_scores') || '[]');
-    const userScores = allScores
-      .filter(s => s.username === currentUsername)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+    try {
+      // Get user stats
+      const stats = await this.firebaseService.getUserStats().catch(err => {
+        console.warn('Failed to load stats from Firebase, using local only:', err);
+        return null;
+      });
 
-    let html = '';
+      console.log('📊 User stats:', stats);
 
-    // Show user stats if available
-    if (stats) {
-      html += `
-        <div class="user-stats-panel">
-          <h3>📊 Your Stats</h3>
-          <div class="stats-grid">
-            <div class="stat-box">
-              <div class="stat-label">Games Played</div>
-              <div class="stat-value">${stats.gamesPlayed || 0}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Highest Wave</div>
-              <div class="stat-value">${stats.highestWave || 0}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Highest Score</div>
-              <div class="stat-value">${stats.highestScore || 0}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Total Score</div>
-              <div class="stat-value">${stats.totalScore || 0}</div>
+      // Get local scores for this user
+      const allScores = JSON.parse(localStorage.getItem('dhivehi_type_scores') || '[]');
+      const userScores = allScores
+        .filter(s => s.username === currentUsername)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+      console.log(`✅ Found ${userScores.length} personal scores`);
+
+      // Force hide loading
+      console.log('✅ Hiding loading spinner');
+      loadingDiv.classList.add('hidden');
+      loadingDiv.style.display = 'none';
+
+      let html = '';
+
+      // Show user stats if available
+      if (stats) {
+        html += `
+          <div class="user-stats-panel">
+            <h3>📊 Your Stats</h3>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-label">Games Played</div>
+                <div class="stat-value">${stats.gamesPlayed || 0}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Highest Wave</div>
+                <div class="stat-value">${stats.highestWave || 0}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Highest Score</div>
+                <div class="stat-value">${stats.highestScore || 0}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Total Score</div>
+                <div class="stat-value">${stats.totalScore || 0}</div>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-    }
+        `;
+      }
 
-    // Show personal best scores
-    if (userScores.length > 0) {
-      html += '<h3 style="margin-top: 20px; color: #7ba8d1; text-align: center; font-family: \'Orbitron\', Arial, sans-serif;">Your Top 5 Scores</h3>';
-      html += this.renderScoresList(userScores, false);
-    } else if (!stats) {
-      html = '<div class="no-scores">No data yet. Start playing!</div>';
-    }
+      // Show personal best scores
+      if (userScores.length > 0) {
+        html += '<h3 style="margin-top: 20px; color: #7ba8d1; text-align: center; font-family: \'Orbitron\', Arial, sans-serif;">Your Top 5 Scores</h3>';
+        html += this.renderScoresList(userScores, false);
+      } else if (!stats) {
+        html = '<div class="no-scores">No data yet. Start playing!</div>';
+      }
 
-    listDiv.innerHTML = html;
+      listDiv.innerHTML = html;
+
+    } catch (error) {
+      console.error('❌ Failed to load personal scores:', error);
+
+      // Force hide loading even on error
+      console.log('⚠️ Hiding loading spinner (error path)');
+      loadingDiv.classList.add('hidden');
+      loadingDiv.style.display = 'none';
+
+      listDiv.innerHTML = '<div class="error">Failed to load personal scores</div>';
+    }
   }
 
   /**
@@ -226,6 +309,7 @@ export class ScoreboardUI {
           <div class="col-wave">Wave</div>
           <div class="col-wpm">WPM</div>
           <div class="col-acc">Acc</div>
+          ${showRank ? '<div class="col-games">Games</div>' : ''}
         </div>
         ${scores.map((score, index) => this.renderScoreRow(score, index + 1, showRank)).join('')}
       </div>
@@ -248,6 +332,7 @@ export class ScoreboardUI {
         <div class="col-wave">${score.wave || '-'}</div>
         <div class="col-wpm">${score.wpm || '-'}</div>
         <div class="col-acc">${score.accuracy || '-'}%</div>
+        ${showRank ? `<div class="col-games">${score.gamesPlayed || 1}</div>` : ''}
       </div>
     `;
   }

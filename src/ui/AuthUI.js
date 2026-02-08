@@ -18,23 +18,44 @@ export class AuthUI {
     this.modal = document.createElement('div');
     this.modal.id = 'auth-modal';
     this.modal.className = 'modal hidden';
+    this.currentTab = 'register'; // Default to register tab
 
     this.modal.innerHTML = `
       <div class="modal-content">
         <h2>🏆 Join the Leaderboard!</h2>
-        <p class="subtitle">Enter your username to save your score</p>
 
-        <div class="auth-form">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="register">Create Account</button>
+          <button class="auth-tab" data-tab="login">Login</button>
+        </div>
+
+        <div class="auth-form" data-jtk-ignore="true">
           <input
             type="text"
             id="username-input"
-            placeholder="Enter your username"
+            placeholder="Enter your username (English)"
             maxlength="20"
-            autocomplete="off"
+            autocomplete="username"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-jtk-ignore="true"
           />
 
-          <button id="submit-username" class="btn-primary">
-            Save Score & Continue
+          <input
+            type="password"
+            id="password-input"
+            placeholder="Enter password (min 6 chars)"
+            minlength="6"
+            autocomplete="current-password"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-jtk-ignore="true"
+          />
+
+          <button id="submit-auth" class="btn-primary">
+            Create Account & Save Score
           </button>
 
           <button id="skip-auth" class="btn-secondary">
@@ -49,25 +70,75 @@ export class AuthUI {
     document.body.appendChild(this.modal);
 
     // Get elements
-    this.input = document.getElementById('username-input');
-    this.submitBtn = document.getElementById('submit-username');
+    this.usernameInput = document.getElementById('username-input');
+    this.passwordInput = document.getElementById('password-input');
+    this.submitBtn = document.getElementById('submit-auth');
     this.skipBtn = document.getElementById('skip-auth');
     this.statusDiv = document.getElementById('auth-status');
 
     // Setup event listeners
     this.setupEventListeners();
+
+    // Explicitly disable JTK on auth inputs
+    this.disableJTKOnAuthInputs();
+  }
+
+  /**
+   * Disable JTK keyboard on authentication inputs
+   */
+  disableJTKOnAuthInputs() {
+    // Simply ensure these inputs don't have the JTK class
+    if (this.usernameInput) {
+      this.usernameInput.classList.remove('thaanaKeyboardInput');
+    }
+    if (this.passwordInput) {
+      this.passwordInput.classList.remove('thaanaKeyboardInput');
+
+      // Ensure password field stays focusable and typeable
+      this.passwordInput.removeAttribute('readonly');
+      this.passwordInput.removeAttribute('disabled');
+      this.passwordInput.style.pointerEvents = 'auto';
+    }
+
+    // Prevent any focus stealing
+    const preventFocusSteal = () => {
+      // Remove any global focus event listeners that JTK might have added
+      document.body.style.userSelect = 'auto';
+    };
+    preventFocusSteal();
   }
 
   /**
    * Setup event listeners
    */
   setupEventListeners() {
+    // Tab switching
+    const tabButtons = this.modal.querySelectorAll('.auth-tab');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        this.switchTab(tab);
+
+        // Update active state
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
     // Submit button
     this.submitBtn.addEventListener('click', () => this.handleSubmit());
 
-    // Enter key
-    this.input.addEventListener('keypress', (e) => {
+    // Enter key on both inputs - use keydown instead of keypress
+    this.usernameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        e.preventDefault();
+        this.passwordInput.focus();
+      }
+    });
+
+    this.passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
         this.handleSubmit();
       }
     });
@@ -75,19 +146,47 @@ export class AuthUI {
     // Skip button
     this.skipBtn.addEventListener('click', () => this.handleSkip());
 
-    // Focus input when modal shows
-    this.modal.addEventListener('transitionend', () => {
-      if (!this.modal.classList.contains('hidden')) {
-        this.input.focus();
-      }
+    // Ensure both inputs are clickable and focusable without JTK interference
+    [this.usernameInput, this.passwordInput].forEach(input => {
+      input.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      input.addEventListener('input', (e) => {
+        e.stopPropagation();
+      }, true);
+
+      input.addEventListener('focus', () => {
+        // Re-apply protections when field gets focus
+        input.classList.remove('thaanaKeyboardInput');
+      });
     });
   }
 
   /**
-   * Handle username submission
+   * Switch between login and register tabs
+   */
+  switchTab(tab) {
+    this.currentTab = tab;
+
+    if (tab === 'login') {
+      this.submitBtn.textContent = 'Login & Save Score';
+    } else {
+      this.submitBtn.textContent = 'Create Account & Save Score';
+    }
+
+    // Clear inputs and status
+    this.usernameInput.value = '';
+    this.passwordInput.value = '';
+    this.statusDiv.classList.add('hidden');
+  }
+
+  /**
+   * Handle authentication submission (login or register)
    */
   async handleSubmit() {
-    const username = this.input.value.trim();
+    const username = this.usernameInput.value.trim();
+    const password = this.passwordInput.value;
 
     if (!username) {
       this.showStatus('Please enter a username', 'error');
@@ -99,13 +198,29 @@ export class AuthUI {
       return;
     }
 
+    if (!password) {
+      this.showStatus('Please enter a password', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      this.showStatus('Password must be at least 6 characters', 'error');
+      return;
+    }
+
     // Disable button during submission
     this.submitBtn.disabled = true;
-    this.submitBtn.textContent = 'Saving...';
+    const originalText = this.submitBtn.textContent;
+    this.submitBtn.textContent = this.currentTab === 'login' ? 'Logging in...' : 'Creating account...';
 
     try {
-      await this.firebaseService.registerUsername(username);
-      this.showStatus('Success! Score saved.', 'success');
+      if (this.currentTab === 'login') {
+        await this.firebaseService.loginUsername(username, password);
+        this.showStatus('✅ Login successful!', 'success');
+      } else {
+        await this.firebaseService.registerUsername(username, password);
+        this.showStatus('✅ Account created! Score saved.', 'success');
+      }
 
       setTimeout(() => {
         this.hide();
@@ -117,7 +232,7 @@ export class AuthUI {
     } catch (error) {
       this.showStatus(error.message, 'error');
       this.submitBtn.disabled = false;
-      this.submitBtn.textContent = 'Save Score & Continue';
+      this.submitBtn.textContent = originalText;
     }
   }
 
@@ -161,13 +276,20 @@ export class AuthUI {
     }
 
     this.modal.classList.remove('hidden');
-    this.input.value = '';
-    this.input.focus();
+    this.usernameInput.value = '';
+    this.passwordInput.value = '';
 
-    // Re-enable JTK for this input
-    if (window.JTK && window.JTK.init) {
-      setTimeout(() => window.JTK.init(), 100);
-    }
+    // Re-apply JTK protection
+    this.disableJTKOnAuthInputs();
+
+    // Reset to register tab
+    this.switchTab('register');
+    const tabButtons = this.modal.querySelectorAll('.auth-tab');
+    tabButtons.forEach(b => b.classList.remove('active'));
+    tabButtons[0].classList.add('active');
+
+    // Focus username input
+    this.usernameInput.focus();
   }
 
   /**
@@ -176,7 +298,8 @@ export class AuthUI {
   hide() {
     this.modal.classList.add('hidden');
     this.submitBtn.disabled = false;
-    this.submitBtn.textContent = 'Save Score & Continue';
+    this.usernameInput.value = '';
+    this.passwordInput.value = '';
   }
 
   /**

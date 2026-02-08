@@ -1,6 +1,6 @@
 # Firebase Setup Guide
 
-This guide will walk you through setting up Firebase for the Dhivehi Type scoreboard feature.
+This guide will walk you through setting up Firebase for the Dhivehi Type scoreboard feature with user authentication.
 
 ## Step 1: Create a Firebase Project
 
@@ -55,11 +55,11 @@ VITE_DISABLE_FIREBASE=false
 1. In Firebase Console, go to **Build** > **Authentication**
 2. Click **"Get started"**
 3. Go to the **"Sign-in method"** tab
-4. Click on **"Anonymous"**
+4. Click on **"Email/Password"**
 5. Toggle **"Enable"** to ON
 6. Click **"Save"**
 
-> **Why Anonymous?** We use anonymous auth to create unique user IDs without requiring email/password. The username is stored separately.
+> **Note:** We use email/password authentication, but usernames are the primary identifier. The system automatically creates email addresses from usernames (username@dhivehitype.local).
 
 ## Step 6: Create Firestore Database
 
@@ -96,6 +96,35 @@ service cloud.firestore {
       // Scores cannot be modified or deleted
       allow update, delete: if false;
     }
+
+    // Users collection - for user stats tracking
+    match /users/{userId} {
+      // Anyone can read user stats
+      allow read: if true;
+
+      // Only the user themselves can create/update their stats
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId;
+
+      // Users cannot be deleted
+      allow delete: if false;
+    }
+
+    // Usernames collection - for username uniqueness checking
+    match /usernames/{username} {
+      // Anyone can read to check username availability
+      allow read: if true;
+
+      // Only authenticated users can create username mappings
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.username is string
+                    && request.resource.data.username.size() >= 2
+                    && request.resource.data.username.size() <= 20;
+
+      // Usernames cannot be modified or deleted
+      allow update, delete: if false;
+    }
   }
 }
 ```
@@ -110,16 +139,55 @@ service cloud.firestore {
    ```
 
 2. Open the game in your browser
-3. You should see a login modal asking for a username
-4. Enter a username and start playing
-5. After game over, check the browser console for:
+3. Play a game and complete it
+4. After game over, you'll see the auth modal
+5. **Create an account** with a username and password
+6. Check browser console for:
    - `✅ Firebase initialized successfully`
-   - `💾 Score saved!`
+   - `✅ Registered as <username>`
+   - `💾 Score saved to Firebase`
 
-6. Press `L` to view the leaderboard
-7. Your score should appear!
+7. Press `L` to view the leaderboard
+8. Your score should appear!
+
+## Step 9: Test Cross-Device Login
+
+1. Open the game on another browser or device
+2. Play a game and reach game over
+3. Click the **"Login"** tab in the auth modal
+4. Enter your username and password
+5. Your stats should sync from the other device!
+
+## How It Works
+
+### Username Uniqueness
+- Usernames are stored in a `usernames` collection
+- Each username document maps to a user ID
+- Registration checks if the username exists before creating the account
+
+### Cross-Device Login
+- Users create an account with username + password
+- Behind the scenes, we use email/password auth with format: `username@dhivehitype.local`
+- Login from any device with your username and password
+- Stats and scores sync automatically via Firebase
+
+### Offline Mode
+- If Firebase is disabled or unavailable, the game uses localStorage
+- All features work offline, but data won't sync across devices
 
 ## Troubleshooting
+
+### "Username already taken" error
+
+- This means someone else registered that username
+- Try a different username
+- Usernames are case-insensitive
+
+### "Invalid username or password" error
+
+- Check that you're entering the correct credentials
+- If you forgot your password, you'll need to create a new account
+- (Password reset can be added in the future)
 
 ### "Firebase config incomplete" message
 
@@ -129,21 +197,15 @@ service cloud.firestore {
 
 ### "Permission denied" error when saving scores
 
-- Check that Anonymous authentication is enabled
+- Check that Email/Password authentication is enabled
 - Verify Firestore security rules are set correctly
-- Make sure you're logged in (entered a username)
+- Make sure you're logged in (entered username and password)
 
 ### Scores not appearing in leaderboard
 
 - Open Firebase Console > Firestore Database
 - Check if there's a `scores` collection with documents
 - If empty, scores aren't being saved - check browser console for errors
-
-### Game works but no Firebase features
-
-- Check browser console for Firebase initialization errors
-- Verify `.env` values are correct
-- Make sure `VITE_DISABLE_FIREBASE` is set to `false`
 
 ## Optional: Disable Firebase (Offline Mode)
 
@@ -157,13 +219,16 @@ If you want to run the game without Firebase:
 2. The game will work with:
    - Local scores only (saved to browser localStorage)
    - No global leaderboard
-   - No authentication required
+   - No cross-device sync
+   - Local authentication only
 
 ## Cost & Limits
 
 Firebase free tier ("Spark plan") includes:
 
-- ✅ **Authentication**: Unlimited anonymous users
+- ✅ **Authentication**:
+  - Unlimited email/password users
+  - No cost for authentication
 - ✅ **Firestore**:
   - 50,000 reads/day
   - 20,000 writes/day
@@ -172,16 +237,31 @@ Firebase free tier ("Spark plan") includes:
 
 For a typing game with ~100 daily users, you'll stay well within free limits.
 
+## Step 10: Create Firestore Index (Automatic)
+
+When you first open the leaderboard, Firebase will automatically create a required index:
+
+1. **First time opening leaderboard**, you might see an error in the console
+2. The error will contain a **link** to create the index
+3. **Click the link** - it will open Firebase Console
+4. Click **"Create Index"** button
+5. Wait 1-2 minutes for the index to build
+6. Refresh the game and the leaderboard will work!
+
+**Alternative:** The index usually creates automatically, so you might not need to do anything.
+
 ## Next Steps
 
 - View your data in Firestore Console
 - Monitor usage in Firebase Console > Usage
-- Add indexes if queries become slow (Firebase will prompt you)
+- The leaderboard now shows each user's **best score** only
+- All game history is still saved in the `scores` collection
 - Consider upgrading to Blaze (pay-as-you-go) only if you exceed limits
 
 ---
 
 Need help? Check:
 - [Firebase Documentation](https://firebase.google.com/docs)
+- [Firebase Authentication](https://firebase.google.com/docs/auth)
 - [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
 - Project issues on GitHub
