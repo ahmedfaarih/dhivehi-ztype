@@ -29,8 +29,8 @@ export class Game {
 
     // Timing
     this.lastTime = 0;
-    this.spawnTimer = 0;
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave); // seconds between enemy spawns
+    this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
     this.waveStartTime = Date.now(); // Track wave start time for WPM calculation
 
     // Wave-based enemy system
@@ -210,6 +210,10 @@ export class Game {
 
       // Remove dead enemies
       if (!enemy.isAlive()) {
+        // If this enemy was targeted, clear the input
+        if (enemy.targeted) {
+          this.input.clear();
+        }
         this.enemies.splice(i, 1);
         continue;
       }
@@ -448,7 +452,7 @@ export class Game {
     // Reset wave-specific counters
     this.enemiesSpawnedThisWave = 0;
     this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
-    this.spawnTimer = 0;
+    this.spawnTimer = this.spawnInterval; // Reset to spawn interval so first enemy spawns immediately
 
     // Reset statistics for new wave
     this.input.resetStatistics();
@@ -739,9 +743,9 @@ export class Game {
     this.gameOver = false;
     this.waveClear = false;
     this.waveStats = null;
-    this.spawnTimer = 0;
     this.waveStartTime = Date.now();
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
+    this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
 
     // Reset wave-based enemy system
     this.enemiesSpawnedThisWave = 0;

@@ -124,17 +124,22 @@ export class InputHandler {
         // Update typed characters count for visual feedback
         targetedEnemy.setTypedChars(normalizedNewValue.length);
 
-        this.checkMatches();
+        // Check if word is complete
+        if (normalizedNewValue === normalizedTargetWord) {
+          this.handleCompleteMatch(targetedEnemy);
+        }
       } else {
-        // Invalid input - reject it and clear input field
+        // Invalid input - reject it but keep progress
         this.soundManager.playEmpty();
 
         // Track error
         this.incorrectInputs++;
         this.totalCharactersTyped++;
 
-        // Clear the input completely to let user start fresh
-        this.clear();
+        // Restore the input to the last valid value (reject the invalid character)
+        if (this.hiddenInput) {
+          this.hiddenInput.value = this.currentInput;
+        }
       }
     } else {
       // No locked target - accept any input and try to find a match
@@ -190,9 +195,22 @@ export class InputHandler {
 
     for (const enemy of this.game.enemies) {
       if (enemy === matchedEnemy) {
+        const wasAlreadyTargeted = enemy.targeted;
         enemy.setTargeted(true);
+
         // Update typed characters count for visual feedback
         enemy.setTypedChars(normalizedInput.length);
+
+        // Fire bullet and hit enemy when first targeting (for first character only)
+        // Subsequent characters are handled in validateAndUpdateInput
+        if (!wasAlreadyTargeted && isNewCharacter) {
+          // Track statistics
+          this.correctInputs++;
+          this.totalCharactersTyped++;
+
+          this.game.fireBullet(enemy);
+          enemy.hit(1);
+        }
 
         const normalizedWord = normalizeThaana(enemy.word);
         if (normalizedInput === normalizedWord) {

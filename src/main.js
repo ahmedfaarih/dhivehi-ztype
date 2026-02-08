@@ -55,7 +55,14 @@ async function init() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'r' || e.key === 'R') {
       if (game.gameOver) {
+        e.preventDefault(); // Prevent 'r' from being typed into input field
+        e.stopPropagation();
         game.restart();
+        // Clear the hidden input to ensure no stray 'r' character
+        const hiddenInput = document.getElementById('hidden-input');
+        if (hiddenInput) {
+          hiddenInput.value = '';
+        }
       }
     }
   });

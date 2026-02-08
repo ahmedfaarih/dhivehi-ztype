@@ -36,7 +36,7 @@ export class Enemy {
     this.size = 15; // Even smaller enemy ships
     this.color = '#00ff88';
     this.targetColor = '#ff4466';
-    this.wordOffset = 30; // Adjusted for smaller image
+    this.wordOffset = 45; // Position text below ship and health bar
     this.typedChars = 0; // Track how many characters have been typed
 
     this.pulsePhase = Math.random() * Math.PI * 2;
@@ -170,10 +170,10 @@ export class Enemy {
       }
     }
 
-    // Draw word above ship (only remaining untyped characters)
+    // Draw word below ship
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '20px "MV Waheed", Arial, sans-serif'; // Smaller font
+    ctx.font = '20px "MV Waheed", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -182,9 +182,8 @@ export class Enemy {
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
 
-    // Only show the untyped portion of the word
-    const remainingWord = this.word.substring(this.typedChars);
-    ctx.fillText(remainingWord, this.x, this.y - this.wordOffset);
+    // Show full word (we'll handle visual feedback differently)
+    ctx.fillText(this.word, this.x, this.y + this.wordOffset);
 
     // Draw health bar
     this.drawHealthBar(ctx);
