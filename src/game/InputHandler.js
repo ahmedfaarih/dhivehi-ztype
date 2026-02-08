@@ -233,7 +233,8 @@ export class InputHandler {
   handleCompleteMatch(enemy) {
     enemy.destroy();
 
-    const points = enemy.word.length * 10;
+    // Scoring: 2 points per character (reduced from 10)
+    const points = enemy.word.length * 2;
     this.game.addScore(points);
 
     this.clear();

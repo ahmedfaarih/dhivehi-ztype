@@ -16,6 +16,11 @@ export class Player {
     this.imageLoaded = false;
     this.image.onload = () => {
       this.imageLoaded = true;
+      console.log('✅ Player ship image loaded');
+    };
+    this.image.onerror = () => {
+      console.error('❌ Failed to load player ship image');
+      this.imageLoaded = false;
     };
 
     this.pulsePhase = 0;

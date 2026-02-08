@@ -69,20 +69,28 @@ export class Enemy {
       return;
     }
 
-    // Move horizontally with bouncing
-    this.x += this.velocityX * deltaTime;
+    // Homing behavior - move towards player
+    if (this.player) {
+      const dx = this.player.x - this.x;
+      const dy = this.player.y - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Bounce off edges
-    if (this.x <= this.minX) {
-      this.x = this.minX;
-      this.velocityX = Math.abs(this.velocityX); // Reverse direction (bounce right)
-    } else if (this.x >= this.maxX) {
-      this.x = this.maxX;
-      this.velocityX = -Math.abs(this.velocityX); // Reverse direction (bounce left)
+      if (distance > 0) {
+        // Move horizontally towards player (30% of speed)
+        const homingSpeed = this.speed * 0.3;
+        this.x += (dx / distance) * homingSpeed * deltaTime;
+
+        // Move down (70% of speed)
+        this.y += (dy / distance) * this.speed * 0.7 * deltaTime;
+      }
+    } else {
+      // Fallback if no player reference
+      this.y += this.speed * deltaTime * 0.6;
     }
 
-    // Move down slowly
-    this.y += this.speed * deltaTime * 0.6; // Slower downward movement
+    // Keep within bounds
+    if (this.x < this.minX) this.x = this.minX;
+    if (this.x > this.maxX) this.x = this.maxX;
 
     // Pulse animation
     this.pulsePhase += deltaTime * 3;

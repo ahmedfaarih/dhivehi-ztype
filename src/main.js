@@ -1,12 +1,20 @@
-import './style.css';
+import './style-new.css';
 import { Game } from './game/Game.js';
 import { getWordStats } from './data/words.js';
+import { FirebaseService } from './services/FirebaseService.js';
+import { AuthUI } from './ui/AuthUI.js';
+import { ScoreboardUI } from './ui/ScoreboardUI.js';
+import { LiveScoreboard } from './ui/LiveScoreboard.js';
 
 /**
  * Main entry point for Dhivehi Type game
  */
 
 let game = null;
+let firebaseService = null;
+let authUI = null;
+let scoreboardUI = null;
+let liveScoreboard = null;
 
 /**
  * Wait for MV Waheed font to load, then initialize the game
@@ -45,20 +53,27 @@ async function init() {
   const wordStats = getWordStats();
   console.log('📚 Word files loaded:', wordStats.totalFiles, 'files (', wordStats.fileRange, ')');
 
-  game = new Game(canvas);
+  // Initialize Firebase and UI components
+  firebaseService = new FirebaseService();
+  authUI = new AuthUI(firebaseService);
+  scoreboardUI = new ScoreboardUI(firebaseService);
+  liveScoreboard = new LiveScoreboard(firebaseService);
+
+  // Initialize game
+  game = new Game(canvas, firebaseService);
 
   window.addEventListener('resize', () => {
     game.setupCanvas();
     game.particles.resize(game.width, game.height);
   });
 
+  // R key to restart
   document.addEventListener('keydown', (e) => {
     if (e.key === 'r' || e.key === 'R') {
       if (game.gameOver) {
-        e.preventDefault(); // Prevent 'r' from being typed into input field
+        e.preventDefault();
         e.stopPropagation();
         game.restart();
-        // Clear the hidden input to ensure no stray 'r' character
         const hiddenInput = document.getElementById('hidden-input');
         if (hiddenInput) {
           hiddenInput.value = '';
@@ -67,12 +82,15 @@ async function init() {
     }
   });
 
+  // Focus game input immediately - don't ask for login on startup
   setTimeout(() => {
     const input = document.getElementById('hidden-input');
-    if (input) {
-      input.focus();
-    }
+    if (input) input.focus();
   }, 100);
+
+  // Expose functions globally for game over screen
+  window.showScoreboard = () => scoreboardUI.show();
+  window.showAuthUI = (callback) => authUI.show(callback);
 }
 
 if (document.readyState === 'loading') {

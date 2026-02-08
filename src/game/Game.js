@@ -10,9 +10,10 @@ import backgroundImageUrl from '../images/bg_space_seamless.png';
  * Main Game class
  */
 export class Game {
-  constructor(canvas) {
+  constructor(canvas, firebaseService = null) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.firebaseService = firebaseService;
 
     // Game dimensions
     this.width = 1200;
@@ -32,6 +33,7 @@ export class Game {
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave); // seconds between enemy spawns
     this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
     this.waveStartTime = Date.now(); // Track wave start time for WPM calculation
+    this.uiUpdateTimer = 0; // Timer for updating UI stats (update every second)
 
     // Wave-based enemy system
     this.enemiesSpawnedThisWave = 0;
@@ -58,9 +60,11 @@ export class Game {
     this.particles = new ParticleSystem(this.width, this.height);
     this.input = new InputHandler(this);
 
-    // UI elements
-    this.scoreElement = document.getElementById('score');
-    this.waveElement = document.getElementById('wave');
+    // UI elements (new stat panel)
+    this.scoreElement = document.getElementById('score-value');
+    this.levelElement = document.getElementById('level-value');
+    this.wpmElement = document.getElementById('wpm-value');
+    this.accuracyElement = document.getElementById('accuracy-value');
     this.healthSegments = document.querySelectorAll('.health-segment');
 
     // Sound (simple oscillator-based sounds)
@@ -125,6 +129,12 @@ export class Game {
     // Use simpler dimensions for game logic
     this.width = rect.width;
     this.height = rect.height;
+
+    // Update player position if it exists
+    if (this.player) {
+      this.player.y = this.height - 80;
+      this.player.x = this.width / 2;
+    }
   }
 
   /**
@@ -184,6 +194,13 @@ export class Game {
       if (this.backgroundScrollY >= this.backgroundImage.height) {
         this.backgroundScrollY = 0;
       }
+    }
+
+    // Update UI stats every second for real-time WPM and accuracy
+    this.uiUpdateTimer += dt;
+    if (this.uiUpdateTimer >= 1.0) {
+      this.updateUI();
+      this.uiUpdateTimer = 0;
     }
 
     // Update player
@@ -379,8 +396,10 @@ export class Game {
 
     const word = getRandomWord(this.wave, maxLength);
 
-    // Random X position (avoid edges)
-    const x = Math.random() * (this.width - 200) + 100;
+    // Random X position with better edge margins (10% margin on each side)
+    const margin = this.width * 0.1;
+    const spawnWidth = this.width - (margin * 2);
+    const x = Math.random() * spawnWidth + margin;
 
     // Speed increases with wave but starts very slow for wave 1
     let speed;
@@ -483,11 +502,30 @@ export class Game {
    * Update UI elements
    */
   updateUI() {
+    // Update score (7-digit padded)
     if (this.scoreElement) {
-      this.scoreElement.textContent = `ސްކޯ: ${this.score}`;
+      this.scoreElement.textContent = String(this.score).padStart(7, '0');
     }
-    if (this.waveElement) {
-      this.waveElement.textContent = `ވޭވް: ${this.wave}`;
+
+    // Update level (3-digit padded)
+    if (this.levelElement) {
+      this.levelElement.textContent = String(this.wave).padStart(3, '0');
+    }
+
+    // Calculate and update WPM
+    if (this.wpmElement) {
+      const currentTime = Date.now();
+      const elapsedMinutes = (currentTime - this.waveStartTime) / 60000;
+      const stats = this.input.getStatistics();
+      const words = stats.correctInputs / 5;
+      const wpm = elapsedMinutes > 0 ? Math.round(words / elapsedMinutes) : 0;
+      this.wpmElement.textContent = String(wpm);
+    }
+
+    // Calculate and update accuracy
+    if (this.accuracyElement) {
+      const stats = this.input.getStatistics();
+      this.accuracyElement.textContent = `${stats.accuracy}%`;
     }
 
     // Update health bar segments
@@ -543,9 +581,54 @@ export class Game {
   /**
    * End game
    */
-  endGame() {
+  async endGame() {
     this.gameOver = true;
     this.playSound('gameover');
+
+    // Calculate stats for saving
+    const overallAccuracy = this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs > 0
+      ? Math.round((this.totalStats.totalCorrectInputs / (this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs)) * 100)
+      : 100;
+
+    const totalMinutes = this.totalStats.totalPlayTime / 60000;
+    const totalWords = this.totalStats.totalCorrectInputs / 5;
+    const overallWPM = totalMinutes > 0 ? Math.round(totalWords / totalMinutes) : 0;
+
+    const scoreData = {
+      score: this.score,
+      wave: this.totalStats.totalWavesCompleted,
+      wpm: overallWPM,
+      accuracy: overallAccuracy
+    };
+
+    // If user is logged in, save immediately
+    if (this.firebaseService && this.firebaseService.isLoggedIn()) {
+      try {
+        await this.firebaseService.saveScore(scoreData);
+        await this.firebaseService.updateUserStats(scoreData);
+        console.log('💾 Score and stats saved!');
+      } catch (error) {
+        console.error('Failed to save score:', error);
+      }
+    } else {
+      // User not logged in - show auth modal after a brief delay
+      if (this.firebaseService && window.showAuthUI) {
+        setTimeout(() => {
+          window.showAuthUI(async (username) => {
+            if (username) {
+              // User registered - save the score and stats
+              try {
+                await this.firebaseService.saveScore(scoreData);
+                await this.firebaseService.updateUserStats(scoreData);
+                console.log('💾 Score and stats saved!');
+              } catch (error) {
+                console.error('Failed to save score:', error);
+              }
+            }
+          });
+        }, 1500); // Show after 1.5 seconds
+      }
+    }
   }
 
   /**
@@ -565,18 +648,18 @@ export class Game {
     const centerY = this.height / 2;
 
     // Wave clear text with glow
-    this.ctx.fillStyle = '#00ff88';
-    this.ctx.font = 'bold 40px Arial, sans-serif';
+    this.ctx.fillStyle = '#5b9bd5';
+    this.ctx.font = 'bold 40px Orbitron, Arial, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = '#00ff8866';
+    this.ctx.shadowColor = 'rgba(91, 155, 213, 0.6)';
 
     const waveText = `WAVE ${String(this.waveStats.wave).padStart(3, '0')} CLEAR`;
     this.ctx.fillText(waveText, centerX, centerY - 120);
 
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '26px Arial, sans-serif';
+    this.ctx.font = '26px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 8;
     this.ctx.shadowColor = '#ffffff44';
     this.ctx.fillText(`SCORE: ${String(this.waveStats.score).padStart(6, '0')}`, centerX, centerY - 70);
@@ -584,19 +667,19 @@ export class Game {
     const boxY = centerY - 20;
     const lineHeight = 38;
 
-    this.ctx.fillStyle = '#00bbff';
-    this.ctx.font = '24px Arial, sans-serif';
+    this.ctx.fillStyle = '#7ba8d1';
+    this.ctx.font = '24px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 8;
-    this.ctx.shadowColor = '#00bbff44';
+    this.ctx.shadowColor = 'rgba(123, 168, 209, 0.4)';
     this.ctx.fillText(`WPM: ${this.waveStats.wpm}`, centerX, boxY);
 
     // Accuracy
-    this.ctx.fillStyle = this.waveStats.accuracy >= 90 ? '#00ff88' :
+    this.ctx.fillStyle = this.waveStats.accuracy >= 90 ? '#5b9bd5' :
                          this.waveStats.accuracy >= 70 ? '#ffaa00' : '#ff4466';
     this.ctx.fillText(`ACCURACY: ${this.waveStats.accuracy}%`, centerX, boxY + lineHeight);
 
     this.ctx.fillStyle = '#aaaaaa';
-    this.ctx.font = '20px Arial, sans-serif';
+    this.ctx.font = '20px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 5;
     this.ctx.fillText(
       `Correct: ${this.waveStats.correctInputs} | Errors: ${this.waveStats.incorrectInputs}`,
@@ -622,7 +705,7 @@ export class Game {
 
     // Game Over text
     this.ctx.fillStyle = '#ff4466';
-    this.ctx.font = 'bold 64px Arial, sans-serif';
+    this.ctx.font = 'bold 64px Orbitron, Arial, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.shadowBlur = 20;
@@ -631,13 +714,13 @@ export class Game {
 
     // Final statistics
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '32px Arial, sans-serif';
+    this.ctx.font = '32px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 10;
     this.ctx.shadowColor = '#ffffff';
     this.ctx.fillText(`FINAL SCORE: ${String(this.score).padStart(6, '0')}`, centerX, centerY - 90);
 
     // Total waves completed
-    this.ctx.font = '28px Arial, sans-serif';
+    this.ctx.font = '28px Orbitron, Arial, sans-serif';
     this.ctx.fillText(`Waves Completed: ${this.totalStats.totalWavesCompleted}`, centerX, centerY - 40);
 
     // Calculate overall accuracy
@@ -652,18 +735,18 @@ export class Game {
     const overallWPM = totalMinutes > 0 ? Math.round(totalWords / totalMinutes) : 0;
 
     // Overall WPM
-    this.ctx.fillStyle = '#00bbff';
-    this.ctx.font = '26px Arial, sans-serif';
+    this.ctx.fillStyle = '#7ba8d1';
+    this.ctx.font = '26px Orbitron, Arial, sans-serif';
     this.ctx.fillText(`Overall WPM: ${overallWPM}`, centerX, centerY + 10);
 
     // Overall Accuracy
-    this.ctx.fillStyle = overallAccuracy >= 90 ? '#00ff88' :
+    this.ctx.fillStyle = overallAccuracy >= 90 ? '#5b9bd5' :
                          overallAccuracy >= 70 ? '#ffaa00' : '#ff4466';
     this.ctx.fillText(`Overall Accuracy: ${overallAccuracy}%`, centerX, centerY + 50);
 
     // Total correct/incorrect
     this.ctx.fillStyle = '#cccccc';
-    this.ctx.font = '22px Arial, sans-serif';
+    this.ctx.font = '22px Orbitron, Arial, sans-serif';
     this.ctx.fillText(
       `Total Correct: ${this.totalStats.totalCorrectInputs} | Errors: ${this.totalStats.totalIncorrectInputs}`,
       centerX,
@@ -671,10 +754,10 @@ export class Game {
     );
 
     // Restart instruction
-    this.ctx.fillStyle = '#00bbff';
-    this.ctx.font = 'bold 26px Arial, sans-serif';
+    this.ctx.fillStyle = '#7ba8d1';
+    this.ctx.font = 'bold 26px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = '#00bbff';
+    this.ctx.shadowColor = 'rgba(123, 168, 209, 0.5)';
     this.ctx.fillText('Press R to Restart', centerX, centerY + 150);
 
     this.ctx.restore();
@@ -746,6 +829,7 @@ export class Game {
     this.waveStartTime = Date.now();
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
     this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
+    this.uiUpdateTimer = 0; // Reset UI update timer
 
     // Reset wave-based enemy system
     this.enemiesSpawnedThisWave = 0;

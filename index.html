@@ -16,24 +16,53 @@
     </script>
   </head>
   <body>
-    <div id="game-container">
-      <canvas id="gameCanvas"></canvas>
-      <div id="ui-overlay">
-        <div id="score">ސްކޯ: 0</div>
-        <div id="wave">ވޭވް: 1</div>
-        <div id="health-container">
-          <div id="health-bar">
-            <div class="health-segment"></div>
-            <div class="health-segment"></div>
-            <div class="health-segment"></div>
-            <div class="health-segment"></div>
-            <div class="health-segment"></div>
-          </div>
+    <div id="game-wrapper">
+      <!-- Title -->
+      <div id="game-title">Dhivehi Deep Space Typing</div>
+
+      <!-- Health Bar (Top Right) -->
+      <div id="health-container">
+        <div id="health-bar">
+          <div class="health-segment"></div>
+          <div class="health-segment"></div>
+          <div class="health-segment"></div>
+          <div class="health-segment"></div>
+          <div class="health-segment"></div>
         </div>
       </div>
-      <!-- Input field with JTK Thaana keyboard support -->
-      <input type="text" id="hidden-input" class="thaanaKeyboardInput" placeholder="ލިޔަން ފަށާ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      <input type="hidden" name="hidden-input_thaanaKeyboardState" value="phonetic" />
+
+      <!-- Left Leaderboard Panel -->
+      <div id="live-scoreboard-container"></div>
+
+      <!-- Main Game Container -->
+      <div id="game-container">
+        <!-- Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Input field with JTK Thaana keyboard support -->
+        <input type="text" id="hidden-input" class="thaanaKeyboardInput" placeholder="ލިޔަން ފަށާ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <input type="hidden" name="hidden-input_thaanaKeyboardState" value="phonetic" />
+      </div>
+
+      <!-- Right Stats Panel -->
+      <div id="stats-panel">
+        <div class="stat-item">
+          <div class="stat-label">SCORE:</div>
+          <div class="stat-value" id="score-value">0000000</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">LEVEL:</div>
+          <div class="stat-value" id="level-value">001</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">WPM:</div>
+          <div class="stat-value" id="wpm-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">ACCURACY:</div>
+          <div class="stat-value" id="accuracy-value">100%</div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
