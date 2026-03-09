@@ -120,28 +120,6 @@ npm run build
 # Preview production build
 npm run preview
 ```
-
-### Adding New Words
-
-Edit `src/data/words.js` and add words to the appropriate difficulty level:
-
-```javascript
-export const words = {
-  easy: [
-    'ދިވެހި',    // Add new easy words here
-    // ...
-  ],
-  medium: [
-    'މަގުބޫލް',  // Add new medium words here
-    // ...
-  ],
-  hard: [
-    'ބައިނަލްއަގުވާމީ', // Add new hard words here
-    // ...
-  ],
-};
-```
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for improvement:
