@@ -12,10 +12,15 @@ export class InputHandler {
     this.inputDisplay = document.getElementById('input-display');
     this.hiddenInput = document.getElementById('hidden-input');
     this.soundManager = new SoundManager();
-    this.lastInputLength = 0; // Track input length to detect new characters
-    this.musicStarted = false; // Track if background music has started
+    this.lastInputLength = 0; 
+    this.musicStarted = false; 
 
-    // Load sounds (music will start on first user interaction)
+    
+    this.correctInputs = 0;
+    this.incorrectInputs = 0;
+    this.totalCharactersTyped = 0;
+
+    
     this.soundManager.loadSounds();
 
     this.setupEventListeners();
@@ -41,27 +46,27 @@ export class InputHandler {
     }
 
     this.hiddenInput.addEventListener('keyup', (e) => {
-      // Start music on first interaction
+      
       this.startMusicOnInteraction();
 
       const value = e.target.value;
 
-      // Validate input before accepting it
+      
       this.validateAndUpdateInput(value);
     });
 
     this.hiddenInput.addEventListener('input', (e) => {
-      // Start music on first interaction
+      
       this.startMusicOnInteraction();
 
       const value = e.target.value;
 
-      // Validate input before accepting it
+      
       this.validateAndUpdateInput(value);
     });
 
     document.addEventListener('click', () => {
-      // Start music on first click
+      
       this.startMusicOnInteraction();
 
       if (this.hiddenInput) {
@@ -70,7 +75,7 @@ export class InputHandler {
     });
 
     this.hiddenInput.addEventListener('keydown', (e) => {
-      // Start music on first keypress
+      
       this.startMusicOnInteraction();
 
       if (e.key === 'Escape') {
@@ -85,46 +90,59 @@ export class InputHandler {
    * @param {string} newValue - New input value from text field
    */
   validateAndUpdateInput(newValue) {
-    // If input is being cleared or shortened (backspace), always allow it
+    
     if (newValue.length <= this.currentInput.length) {
       this.currentInput = newValue;
       this.checkMatches();
       return;
     }
 
-    // Check if we have a targeted enemy
+    
     const targetedEnemy = this.game.enemies.find(e => e.targeted);
 
     if (targetedEnemy) {
-      // We have a locked target - validate the new input
+      
       const normalizedNewValue = normalizeThaana(newValue);
       const normalizedTargetWord = normalizeThaana(targetedEnemy.word);
 
-      // Check if the new input still matches the target
+      
       if (normalizedTargetWord.startsWith(normalizedNewValue)) {
-        // Valid input - accept it
+        
         this.currentInput = newValue;
         this.soundManager.playShotgun();
 
-        // Fire bullet at the enemy
+        
+        this.correctInputs++;
+        this.totalCharactersTyped++;
+
+        
         this.game.fireBullet(targetedEnemy);
 
-        // Hit the enemy (reduce health by 1)
+        
         targetedEnemy.hit(1);
 
-        // Update typed characters count for visual feedback
+        
         targetedEnemy.setTypedChars(normalizedNewValue.length);
 
-        this.checkMatches();
+        
+        if (normalizedNewValue === normalizedTargetWord) {
+          this.handleCompleteMatch(targetedEnemy);
+        }
       } else {
-        // Invalid input - reject it
+        
         this.soundManager.playEmpty();
 
-        // Revert the input field to the previous valid state
-        this.hiddenInput.value = this.currentInput;
+        
+        this.incorrectInputs++;
+        this.totalCharactersTyped++;
+
+        
+        if (this.hiddenInput) {
+          this.hiddenInput.value = this.currentInput;
+        }
       }
     } else {
-      // No locked target - accept any input and try to find a match
+      
       this.currentInput = newValue;
       this.checkMatches();
     }
@@ -145,7 +163,7 @@ export class InputHandler {
     let foundMatch = false;
     let matchedEnemy = null;
 
-    // Check if this is a new character being typed (used only for initial match sound)
+    
     const isNewCharacter = this.currentInput.length > this.lastInputLength;
 
     for (const enemy of this.game.enemies) {
@@ -156,8 +174,8 @@ export class InputHandler {
           foundMatch = true;
           matchedEnemy = enemy;
 
-          // Play shotgun sound ONLY when initially finding a match (not locked yet)
-          // When locked, sound is played in validateAndUpdateInput
+          
+          
           if (isNewCharacter && !this.game.enemies.some(e => e.targeted)) {
             this.soundManager.playShotgun();
           }
@@ -170,16 +188,29 @@ export class InputHandler {
       }
     }
 
-    // Play empty sound if no match found (only when not locked)
+    
     if (!foundMatch && isNewCharacter && !this.game.enemies.some(e => e.targeted)) {
       this.soundManager.playEmpty();
     }
 
     for (const enemy of this.game.enemies) {
       if (enemy === matchedEnemy) {
+        const wasAlreadyTargeted = enemy.targeted;
         enemy.setTargeted(true);
-        // Update typed characters count for visual feedback
+
+        
         enemy.setTypedChars(normalizedInput.length);
+
+        
+        
+        if (!wasAlreadyTargeted && isNewCharacter) {
+          
+          this.correctInputs++;
+          this.totalCharactersTyped++;
+
+          this.game.fireBullet(enemy);
+          enemy.hit(1);
+        }
 
         const normalizedWord = normalizeThaana(enemy.word);
         if (normalizedInput === normalizedWord) {
@@ -190,7 +221,7 @@ export class InputHandler {
       }
     }
 
-    // Update last input length
+    
     this.lastInputLength = this.currentInput.length;
 
     return foundMatch;
@@ -202,7 +233,8 @@ export class InputHandler {
   handleCompleteMatch(enemy) {
     enemy.destroy();
 
-    const points = enemy.word.length * 10;
+    
+    const points = enemy.word.length * 2;
     this.game.addScore(points);
 
     this.clear();
@@ -234,6 +266,31 @@ export class InputHandler {
    */
   getCurrentInput() {
     return this.currentInput;
+  }
+
+  /**
+   * Get current typing statistics
+   */
+  getStatistics() {
+    const accuracy = this.totalCharactersTyped > 0
+      ? Math.round((this.correctInputs / this.totalCharactersTyped) * 100)
+      : 100;
+
+    return {
+      correctInputs: this.correctInputs,
+      incorrectInputs: this.incorrectInputs,
+      totalCharactersTyped: this.totalCharactersTyped,
+      accuracy: accuracy
+    };
+  }
+
+  /**
+   * Reset statistics for new wave
+   */
+  resetStatistics() {
+    this.correctInputs = 0;
+    this.incorrectInputs = 0;
+    this.totalCharactersTyped = 0;
   }
 
   /**

@@ -1,133 +1,115 @@
 /**
- * Dhivehi Word Lists organized by difficulty
- * Easy: 3-5 letters
- * Medium: 6-8 letters
- * Hard: 9+ letters
+ * Dhivehi Word Lists - dynamically loaded from text files
+ * Files 5.txt to 36.txt contain words organized by difficulty
+ * Wave 1 → 5.txt, Wave 2 → 6.txt, etc.
  */
 
-export const words = {
-  easy: [
-    // Common 3-5 letter words
-    'ދިވެހި',    // Dhivehi
-    'ރާއްޖެ',    // Raajje (Maldives)
-    'ބަހުރުވަ',  // Bahuruvaa (language)
-    'ކުޑަ',      // Kuda (small)
-    'ބޮޑު',      // Bodu (big)
-    'ރަނގަޅު',   // Rangalhu (good)
-    'ފަހުން',     // Fahun (later)
-    'މިހާރު',     // Miharu (now)
-    'ކުރިން',     // Kurin (before)
-    'މާލެ',      // Male (capital city)
-    'ފޮތް',      // Foth (book)
-    'ގަނޑު',     // Gandu (mountain)
-    'ރަށް',      // Rash (island)
-    'ފަރު',      // Faru (reef)
-    'ފެން',      // Fen (water)
-    'ކައްކާ',    // Kakka (eat)
-    'މަސް',      // Mas (fish)
-    'ބަތް',      // Bath (rice)
-    'ރޮށި',      // Roshi (bread)
-    'ހުސް',      // Hus (empty)
-    'ފުރާ',      // Furaa (full)
-    'ދުރު',      // Dhuru (far)
-    'ހިތް',      // Hith (heart)
-    'ފައި',      // Fai (foot)
-    'އަތް',  
-  ],
+// Import all word files at build time using Vite's glob import
+// query: '?raw' imports file contents as string
+const wordFiles = import.meta.glob('./words/*.txt', { eager: true, query: '?raw', import: 'default' });
 
-  medium: [
-    // 6-8 letter words
-    'މަގުބޫލް',   // Magubool (popular)
-    'ފަރުވާ',     // Faruvaa (care)
-    'ދަރިވަރުން',  // Dharivarun (children)
-    'މަސައްކަތް', // Masakkath (work)
-    'ސަރުކާރު',   // Sarukaru (government)
-    'ދަރުސް',     // Dharus (lesson)
-    'ސުކޫލް',     // Sukool (school)
-    'ކުޅިވަރު',   // Kulivaru (sports)
-    'ކުލަވަރު',   // Kulavaru (color/variety)
-    'ފިލްމު',     // Filmu (film)
-    'މައުސޫމް',   // Mausoonu (innocent)
-    'ފުރަތަމަ',   // Furathama (first)
-    'ފަހުންތަ',   // Fahuntha (last)
-    'ދިރާސާ',    // Dhiraasaa (study)
-    'ޚިދުމަތް',   // Khidhumathi (service)
-    'ސަރަހައްދު',  // Sarahadhdhu (area)
-    'މުހިއްމު',   // Muhimmu (important)
-    'ބާރުވެރި',   // Baaruveri (powerful)
-    'ސަލާމަތް',   // Salaamathi (safe/goodbye)
-    'މާރުހަބާ',   // Maaruhaba (welcome)
-    'ސުޕާރކޯ',    // Supaarko (market)
-    'ޖަޒީރާ',    // Jazeeraa (island)
-    'ބަންދަރު',    // Bandharu (port)
-    'އަސާސީ',     // Asaasee (basic)
-    'ފުށުން',      // Fushun (beginning)
-  ],
+// Parse and cache words by file number
+const wordsByFileNumber = {};
 
-  hard: [
-    // 9+ letter words
-    'ބައިނަލްއަގުވާމީ', // Bainalaguwaamee (international)
-    'ސަޤާފަތް',         // Saqaafath (culture)
-    'ތަފާތުވުން',        // Tafaathuvun (difference)
-    'ރައީސުލްޖުމްހޫރިއްޔާ', // Raeesuljumhooriyyaa (president)
-    'މުވައްޒަފުން',      // Muvazzafun (employees)
-    'ފަރުދީވެރި',        // Farudhee veri (individual)
-    'މުހިއްމުކަން',       // Muhimmukam (importance)
-    'ބަދަލުވުން',        // Badhaluvun (change)
-    'ސައިންސް',          // Saiense (science)
-    'ޓެކްނޮލޮޖީ',        // Technology
-    'އިޖުތިމާއީ',        // Ijthimaa'ee (social)
-    'އިގުތިސާދީ',        // Iguthisaadhee (economic)
-    'ސިޔާސީގޮތުން',      // Siyaasee gothun (politically)
-    'ތަރައްޤީ',          // Tharaqqee (development)
-    'ސަރަހައްދީ',        // Sarahaddhee (regional)
-    'ޑިމޮކްރަސީ',        // Democracy
-    'އިންތިޚާބު',        // Inthikhaab (election)
-    'ފުރިހަމަ',          // Furihama (complete/perfect)
-  ],
-};
+// Process all imported files
+for (const path in wordFiles) {
+  // Extract file number from path (e.g., "./words/4.txt" → 4)
+  const match = path.match(/\/(\d+)\.txt$/);
+  if (match) {
+    const fileNumber = parseInt(match[1]);
+    const content = wordFiles[path];
+
+    // Parse words: split by newlines, remove all trailing punctuation, filter empty
+    const words = content
+      .split('\n')
+      .map(word => word.trim().replace(/[،.؟!;:،]+$/, '').trim())
+      .filter(word => word.length > 0);
+
+    wordsByFileNumber[fileNumber] = words;
+  }
+}
+
+// Fallback word list in case files don't load
+const fallbackWords = [
+  'ދިވެހި', 'ރާއްޖެ', 'ބަހުރުވަ', 'ކުޑަ', 'ބޮޑު',
+  'ރަނގަޅު', 'ފަހުން', 'މިހާރު', 'ކުރިން', 'މާލެ'
+];
 
 /**
- * Get a random word from the specified difficulty level
- * @param {string} difficulty - 'easy', 'medium', or 'hard'
+ * Get word list for a specific wave
+ * @param {number} wave - Current wave number
+ * @returns {string[]} Array of words for this wave
+ */
+function getWordsForWave(wave) {
+  // Map wave number to file number (wave 1 → file 5, wave 2 → file 6, etc.)
+  const fileNumber = wave + 4;
+
+  // Get words from file, or use fallback
+  const words = wordsByFileNumber[fileNumber];
+
+  if (words && words.length > 0) {
+    return words;
+  }
+
+  // If file doesn't exist, try to use the last available file
+  const availableFiles = Object.keys(wordsByFileNumber).map(Number).sort((a, b) => b - a);
+  if (availableFiles.length > 0) {
+    const lastFile = availableFiles[0];
+    return wordsByFileNumber[lastFile] || fallbackWords;
+  }
+
+  return fallbackWords;
+}
+
+/**
+ * Get a random word for the current wave
+ * @param {number} wave - Current wave number
+ * @param {number|null} maxLength - Optional maximum word length (for progression)
  * @returns {string} Random Dhivehi word
  */
-export function getRandomWord(difficulty = 'easy') {
-  const wordList = words[difficulty] || words.easy;
+export function getRandomWord(wave = 1, maxLength = null) {
+  let wordList = getWordsForWave(wave);
+
+  // Filter by length if specified
+  if (maxLength !== null) {
+    const filtered = wordList.filter(word => word.length <= maxLength);
+    // Use filtered list if it has words, otherwise use full list as fallback
+    if (filtered.length > 0) {
+      wordList = filtered;
+    }
+  }
+
   return wordList[Math.floor(Math.random() * wordList.length)];
 }
 
 /**
  * Get difficulty level based on wave number
  * @param {number} wave - Current wave number
- * @returns {string} Difficulty level
+ * @returns {number} Wave number (used as difficulty indicator)
  */
 export function getDifficultyForWave(wave) {
-  if (wave < 5) return 'easy';
-  if (wave < 10) return 'medium';
-  return 'hard';
+  // Return wave number itself as the difficulty
+  return wave;
 }
 
 /**
- * Get a mix of words from multiple difficulty levels
- * @param {number} wave - Current wave number
- * @returns {string[]} Array of words
+ * Get information about loaded word files (for debugging)
+ * @returns {Object} Stats about loaded files
  */
-export function getWordMix(wave) {
-  const difficulty = getDifficultyForWave(wave);
-  const mix = [];
+export function getWordStats() {
+  const fileNumbers = Object.keys(wordsByFileNumber).map(Number).sort((a, b) => a - b);
+  const stats = {
+    totalFiles: fileNumbers.length,
+    fileRange: fileNumbers.length > 0 ? `${fileNumbers[0]}-${fileNumbers[fileNumbers.length - 1]}` : 'none',
+    files: {}
+  };
 
-  // Add words based on wave progression
-  if (difficulty === 'easy') {
-    mix.push(...words.easy.slice(0, 10));
-  } else if (difficulty === 'medium') {
-    mix.push(...words.easy.slice(0, 5));
-    mix.push(...words.medium.slice(0, 10));
-  } else {
-    mix.push(...words.easy.slice(0, 3));
-    mix.push(...words.medium.slice(0, 5));
-    mix.push(...words.hard.slice(0, 10));
+  for (const fileNum of fileNumbers) {
+    stats.files[fileNum] = {
+      wordCount: wordsByFileNumber[fileNum].length,
+      sampleWords: wordsByFileNumber[fileNum].slice(0, 3)
+    };
   }
 
-  return mix;
+  return stats;
 }

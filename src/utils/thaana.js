@@ -91,34 +91,33 @@ export function measureThaanaText(ctx, text) {
  * Maps common keyboard keys to Thaana characters
  */
 export const thaanaKeyMap = {
-  'a': 'ަ',  // a fili
-  'A': 'ާ',  // aa
-  'i': 'ި',  // i fili
-  'I': 'ީ',  // ee
-  'u': 'ު',  // u fili
-  'U': 'ޫ',  // oo
-  'e': 'ެ',  // e fili
-  'E': 'ޭ',  // ey
-  'o': 'ޮ',  // o fili
-  'O': 'ޯ',  // o
-  // Add more mappings as needed
+  'a': 'ަ',  
+  'A': 'ާ',  
+  'i': 'ި',  
+  'I': 'ީ',  
+  'u': 'ު',  
+  'U': 'ޫ',  
+  'e': 'ެ',  
+  'E': 'ޭ',  
+  'o': 'ޮ',  
+  'O': 'ޯ',  
+  
 };
 
 /**
  * Constants for Thaana text rendering
  */
 export const THAANA_CONSTANTS = {
-  // Unicode ranges
   THAANA_START: 0x0780,
   THAANA_END: 0x07bf,
 
-  // Common Thaana characters
-  SUKUN: 'ް',       // Sukun (vowel killer)
-  ABAFILI: 'ަ',     // Abafili (short a)
-  AABAAFILI: 'ާ',   // Aabaafili (long a)
-  IBIFILI: 'ި',     // Ibifili (short i)
-  EEBEEFILI: 'ީ',   // Eebeefili (long i)
+  
+  SUKUN: 'ް',       
+  ABAFILI: 'ަ',     
+  AABAAFILI: 'ާ',   
+  IBIFILI: 'ި',     
+  EEBEEFILI: 'ީ',   
 
-  // Direction
-  DIRECTION: 'rtl',  // Right-to-left
+  
+  DIRECTION: 'rtl',  
 };
