@@ -124,6 +124,7 @@ npm run preview
 
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for improvement:
 
+- [ ] Current wordlist pretty shit its something I extracted from somee articles so need to fix the list. 
 - [ ] Add different game modes (time attack, survival, etc.)
 - [ ] Power-ups and special abilities
 - [ ] Better explosion effects and animations
