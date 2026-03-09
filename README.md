@@ -1,4 +1,4 @@
-# ދިވެހި ޓައިޕް | Dhivehi Type
+# ދިވެހި ޒީ ޓައިޕް | Dhivehi Z-Type
 
 A fast-paced typing game for practicing Dhivehi (Thaana) script, inspired by classic typing games like ZType. Test your Dhivehi typing skills by destroying enemy ships before they reach the bottom!
 
@@ -7,25 +7,7 @@ A fast-paced typing game for practicing Dhivehi (Thaana) script, inspired by cla
 
 ## 🎮 About
 
-Dhivehi Type is an educational typing game designed to help users improve their Dhivehi/Thaana typing speed and accuracy. Enemy ships fall from the top of the screen with Dhivehi words - type the words to destroy them before they reach the bottom!
-
-## ✨ Features
-
-- **📝 Phonetic Input**: Type English letters and they automatically convert to Thaana using [JTK (Javascript Thaana Keyboard)](https://github.com/jawish/jtk)
-- **🎯 Progressive Difficulty**: 3 difficulty levels (Easy, Medium, Hard) with words getting longer as you progress
-- **🌊 Wave System**: Enemies spawn faster and move quicker with each wave
-- **⭐ Score Tracking**: Earn points based on word length
-- **❤️ Lives System**: 3 lives - don't let enemies reach the bottom!
-- **🎨 Visual Effects**:
-  - Animated starfield background
-  - Explosion effects when destroying enemies
-  - Targeting indicators and glow effects
-  - Smooth animations
-- **🔊 Sound Effects**: Audio feedback using Web Audio API
-- **📱 Responsive Design**: Plays well on different screen sizes
-- **🎨 Custom Thaana Font**: Uses Waheed font for authentic Dhivehi text rendering
-
-## 🚀 Getting Started
+Dhivehi zType is an educational typing game designed to help users improve their Dhivehi/Thaana typing speed and accuracy. Enemy ships fall from the top of the screen with Dhivehi words - type the words to destroy them before they reach the bottom!
 
 ### Prerequisites
 
@@ -62,11 +44,6 @@ npm run build
 - **Escape**: Clear current input
 - **R**: Restart game (when game is over)
 
-### Core Technologies
-- **Vanilla JavaScript** - Pure JS, no frameworks
-- **HTML5 Canvas** - For game rendering
-- **CSS3** - Styling and animations
-- **Vite** - Build tool and dev server
 
 ### Libraries & APIs
 - **[JTK (Javascript Thaana Keyboard)](https://github.com/jawish/jtk)** by Jawish Hameed - Phonetic Thaana input
@@ -169,7 +146,6 @@ export const words = {
 
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for improvement:
 
-- [ ] Implement high score leaderboard
 - [ ] Add different game modes (time attack, survival, etc.)
 - [ ] Power-ups and special abilities
 - [ ] Better explosion effects and animations
@@ -187,10 +163,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **JTK (Javascript Thaana Keyboard)** by [Jawish Hameed](https://github.com/jawish) - Phonetic Thaana input system
 - Inspired by **ZType** by Dominic Szablewski - Original typing game concept
 
-### Fonts
-- **MV Waheed (A_Waheed)** - Authentic Thaana/Dhivehi font for text rendering
-  - Part of the Dhivehi font collection
-  - Provides clear and readable Thaana characters
 
 ### Sound Effects
 - Sound effects sourced from **[Freesound.org](https://freesound.org)**
@@ -204,10 +176,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - `badship.png` - Enemy ship sprite
   - Custom artwork for game visuals
 
-## 📧 Contact
 
-For questions, suggestions, or feedback, please open an issue on GitHub.
-
----
-
-**Made for just killing time**
+**Made for just killing time during my winter break**

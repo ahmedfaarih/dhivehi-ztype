@@ -21,16 +21,13 @@ let liveScoreboard = null;
  */
 async function waitForFont() {
   try {
-    // Wait for the MV Waheed font to be loaded
     if ('fonts' in document) {
       await document.fonts.load('20px "MV Waheed"');
       await document.fonts.ready;
     } else {
-      // Fallback for browsers without Font Loading API
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   } catch (error) {
-    // Continue anyway after short delay
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 }
@@ -46,20 +43,16 @@ async function init() {
     return;
   }
 
-  // Wait for font to be loaded before starting game
   await waitForFont();
 
-  // Log word loading stats
   const wordStats = getWordStats();
   console.log('📚 Word files loaded:', wordStats.totalFiles, 'files (', wordStats.fileRange, ')');
 
-  // Initialize Firebase and UI components
   firebaseService = new FirebaseService();
   authUI = new AuthUI(firebaseService);
   scoreboardUI = new ScoreboardUI(firebaseService);
   liveScoreboard = new LiveScoreboard(firebaseService);
 
-  // Initialize game
   game = new Game(canvas, firebaseService);
 
   window.addEventListener('resize', () => {
@@ -67,7 +60,6 @@ async function init() {
     game.particles.resize(game.width, game.height);
   });
 
-  // R key to restart
   document.addEventListener('keydown', (e) => {
     if (e.key === 'r' || e.key === 'R') {
       if (game.gameOver) {
@@ -82,13 +74,11 @@ async function init() {
     }
   });
 
-  // Focus game input immediately - don't ask for login on startup
   setTimeout(() => {
     const input = document.getElementById('hidden-input');
     if (input) input.focus();
   }, 100);
 
-  // Expose functions globally for game over screen
   window.showScoreboard = () => scoreboardUI.show();
   window.showAuthUI = (callback) => authUI.show(callback);
 }

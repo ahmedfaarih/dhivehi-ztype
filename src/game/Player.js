@@ -5,12 +5,12 @@ export class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.size = 40; // Increased for image
+    this.size = 40; 
     this.color = '#00bbff';
     this.lives = 5;
     this.maxLives = 5;
 
-    // Load ship image
+    
     this.image = new Image();
     this.image.src = '/images/goodship.png';
     this.imageLoaded = false;
@@ -46,26 +46,26 @@ export class Player {
     const pulse = Math.sin(this.pulsePhase) * 0.1 + 1;
     const currentSize = this.size * pulse;
 
-    // Calculate rotation angle if targeting an enemy
+    
     let rotationAngle = 0;
     if (this.targetEnemy) {
-      // Calculate angle from player to target enemy
+      
       const dx = this.targetEnemy.x - this.x;
       const dy = this.targetEnemy.y - this.y;
-      rotationAngle = Math.atan2(dy, dx) + Math.PI / 2; // +90° because ship points up by default
+      rotationAngle = Math.atan2(dy, dx) + Math.PI / 2; 
     }
 
-    // Apply rotation transformation
+    
     ctx.translate(this.x, this.y);
     ctx.rotate(rotationAngle);
     ctx.translate(-this.x, -this.y);
 
     if (this.imageLoaded) {
-      // Draw image with glow effect
+      
       ctx.shadowBlur = 15;
       ctx.shadowColor = this.color;
 
-      // Draw the image centered
+      
       ctx.drawImage(
         this.image,
         this.x - currentSize,
@@ -74,7 +74,7 @@ export class Player {
         currentSize * 2
       );
     } else {
-      // Fallback to triangle if image not loaded
+      
       ctx.fillStyle = this.color;
       ctx.shadowBlur = 15;
       ctx.shadowColor = this.color;

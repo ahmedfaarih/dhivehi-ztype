@@ -30,7 +30,7 @@ export class ConfirmModal {
 
     document.body.appendChild(this.modal);
 
-    // Setup event listeners
+    
     this.setupEventListeners();
   }
 
@@ -44,14 +44,14 @@ export class ConfirmModal {
     yesBtn.addEventListener('click', () => this.confirm(true));
     noBtn.addEventListener('click', () => this.confirm(false));
 
-    // ESC key to cancel
+    
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
         this.confirm(false);
       }
     });
 
-    // Click outside to cancel
+    
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
         this.confirm(false);
@@ -69,14 +69,14 @@ export class ConfirmModal {
     return new Promise((resolve) => {
       this.resolveCallback = resolve;
 
-      // Set content
+      
       document.getElementById('confirm-title').textContent = title;
       document.getElementById('confirm-message').textContent = message;
 
-      // Show modal
+      
       this.modal.classList.remove('hidden');
 
-      // Focus Yes button
+      
       document.getElementById('confirm-yes').focus();
     });
   }

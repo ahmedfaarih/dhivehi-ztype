@@ -14,7 +14,7 @@ export class FirebaseService {
     this.db = null;
     this.currentUser = null;
 
-    // Initialize Firebase
+    
     this.initialize();
   }
 
@@ -23,13 +23,13 @@ export class FirebaseService {
    */
   async initialize() {
     try {
-      // Check if Firebase is disabled via env var
+      
       if (import.meta.env.VITE_DISABLE_FIREBASE === 'true') {
         console.log('🔥 Firebase is disabled via environment variable');
         return;
       }
 
-      // Get Firebase config from environment variables
+      
       const firebaseConfig = {
         apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
         authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -39,7 +39,7 @@ export class FirebaseService {
         appId: import.meta.env.VITE_FIREBASE_APP_ID
       };
 
-      // Check if all required config values are present
+      
       const hasAllKeys = Object.values(firebaseConfig).every(
         val => val && val !== 'your_api_key_here' && !val.includes('your_')
       );
@@ -50,7 +50,7 @@ export class FirebaseService {
         return;
       }
 
-      // Initialize Firebase
+      
       this.app = initializeApp(firebaseConfig);
       this.auth = getAuth(this.app);
       this.db = getFirestore(this.app);
@@ -58,7 +58,7 @@ export class FirebaseService {
       this.enabled = true;
       console.log('✅ Firebase initialized successfully');
 
-      // Try to restore previous session
+      
       await this.restoreSession();
 
     } catch (error) {
@@ -117,7 +117,7 @@ export class FirebaseService {
 
     const trimmedUsername = username.trim();
 
-    // Validate username
+    
     if (trimmedUsername.length < 2 || trimmedUsername.length > 20) {
       throw new Error('Username must be between 2 and 20 characters');
     }
@@ -126,17 +126,17 @@ export class FirebaseService {
       if (this.enabled) {
         console.log('🔥 Firebase is enabled, registering with Firebase...');
 
-        // Check if username is available
+        
         const available = await this.isUsernameAvailable(trimmedUsername);
         if (!available) {
           throw new Error('Username already taken. Please choose another.');
         }
 
-        // Create email from username (username@dhivehitype.local)
+        
         const email = `${trimmedUsername.toLowerCase().replace(/\s/g, '_')}@dhivehitype.local`;
         console.log('📧 Generated email:', email);
 
-        // Create Firebase user
+        
         const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
         console.log('✅ Firebase user created');
 
@@ -144,7 +144,7 @@ export class FirebaseService {
           displayName: trimmedUsername
         });
 
-        // Store username mapping in Firestore
+        
         await setDoc(doc(this.db, 'usernames', trimmedUsername.toLowerCase()), {
           uid: userCredential.user.uid,
           username: trimmedUsername,
@@ -160,7 +160,7 @@ export class FirebaseService {
         console.log(`✅ Registered as ${trimmedUsername}`);
       } else {
         console.log('⚠️ Firebase not enabled, using offline mode');
-        // Offline mode - just store locally
+        
         this.currentUser = {
           uid: 'local_' + Date.now(),
           username: trimmedUsername
@@ -168,7 +168,7 @@ export class FirebaseService {
         console.log(`✅ Playing as ${trimmedUsername} (offline mode)`);
       }
 
-      // Save username and password to localStorage
+      
       this.saveLocalUsername(trimmedUsername);
       this.saveLocalPassword(password);
 
@@ -179,7 +179,7 @@ export class FirebaseService {
       console.error('❌ Error code:', error.code);
       console.error('❌ Error message:', error.message);
 
-      // Check for specific Firebase errors
+      
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Username already taken. Please choose another.');
       } else if (error.code === 'auth/operation-not-allowed') {
@@ -188,7 +188,7 @@ export class FirebaseService {
         throw new Error('Password is too weak. Please use a stronger password.');
       }
 
-      // Fallback to offline mode
+      
       console.log('⚠️ Falling back to offline mode');
       this.currentUser = {
         uid: 'local_' + Date.now(),
@@ -221,11 +221,11 @@ export class FirebaseService {
       if (this.enabled) {
         console.log('🔥 Firebase is enabled, logging in with Firebase...');
 
-        // Create email from username
+        
         const email = `${trimmedUsername.toLowerCase().replace(/\s/g, '_')}@dhivehitype.local`;
         console.log('📧 Generated email:', email);
 
-        // Sign in with Firebase
+        
         const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
         console.log('✅ Firebase login successful');
 
@@ -237,7 +237,7 @@ export class FirebaseService {
         console.log(`✅ Logged in as ${trimmedUsername}`);
       } else {
         console.log('⚠️ Firebase not enabled, checking local credentials');
-        // Offline mode - check local credentials
+        
         const savedPassword = this.getLocalPassword();
         const savedUsername = this.getLocalUsername();
 
@@ -252,7 +252,7 @@ export class FirebaseService {
         }
       }
 
-      // Save credentials to localStorage
+      
       this.saveLocalUsername(trimmedUsername);
       this.saveLocalPassword(password);
 
@@ -263,7 +263,7 @@ export class FirebaseService {
       console.error('❌ Error code:', error.code);
       console.error('❌ Error message:', error.message);
 
-      // Check for specific Firebase errors
+      
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         throw new Error('Invalid username or password');
       } else if (error.code === 'auth/too-many-requests') {
@@ -300,19 +300,19 @@ export class FirebaseService {
 
     try {
       if (this.enabled && this.db) {
-        // Save to Firebase
+        
         await addDoc(collection(this.db, 'scores'), scoreEntry);
         console.log('💾 Score saved to Firebase');
       }
 
-      // Always save locally as backup
+      
       this.saveLocalScore(scoreEntry);
       return true;
 
     } catch (error) {
       console.error('❌ Failed to save score to Firebase:', error.message);
 
-      // Fallback to local storage
+      
       this.saveLocalScore(scoreEntry);
       console.log('💾 Score saved locally');
       return true;
@@ -326,14 +326,14 @@ export class FirebaseService {
   async getLeaderboard(limitCount = 10) {
     console.log(`🔍 getLeaderboard called, Firebase enabled: ${this.enabled}`);
 
-    // If Firebase is not enabled, immediately return local scores
+    
     if (!this.enabled || !this.db) {
       console.log('⚠️ Firebase not enabled, using local scores');
       return this.getLocalLeaderboard(limitCount);
     }
 
     try {
-      // Get from Firebase users collection (shows each user's best score)
+      
       const q = query(
         collection(this.db, 'users'),
         orderBy('highestScore', 'desc'),
@@ -345,7 +345,7 @@ export class FirebaseService {
 
       querySnapshot.forEach((doc) => {
         const userData = doc.data();
-        // Format to match score structure expected by UI
+        
         scores.push({
           id: doc.id,
           username: userData.username,
@@ -364,7 +364,7 @@ export class FirebaseService {
 
     } catch (error) {
       console.error('❌ Failed to load Firebase leaderboard:', error.message);
-      // Fallback to local scores on error
+      
       return this.getLocalLeaderboard(limitCount);
     }
   }
@@ -413,7 +413,7 @@ export class FirebaseService {
       return null;
     }
 
-    // If Firebase is not enabled, immediately return local stats
+    
     if (!this.enabled || !this.db) {
       console.log('⚠️ Firebase not enabled, using local stats');
       return this.getLocalUserStats();
@@ -430,7 +430,7 @@ export class FirebaseService {
       }
     } catch (error) {
       console.error('❌ Failed to load user stats from Firebase:', error);
-      // Fallback to localStorage
+      
       return this.getLocalUserStats();
     }
   }
@@ -451,7 +451,7 @@ export class FirebaseService {
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
-          // Update existing stats
+          
           const currentStats = userDoc.data();
           const updates = {
             gamesPlayed: increment(1),
@@ -461,7 +461,7 @@ export class FirebaseService {
             lastPlayed: Date.now()
           };
 
-          // Track best WPM and accuracy
+          
           if (wpm && wpm > (currentStats.bestWpm || 0)) {
             updates.bestWpm = wpm;
           }
@@ -471,7 +471,7 @@ export class FirebaseService {
 
           await updateDoc(userRef, updates);
         } else {
-          // Create new user stats
+          
           await setDoc(userRef, {
             username: this.currentUser.username,
             userId: this.currentUser.uid,
@@ -489,20 +489,20 @@ export class FirebaseService {
         console.log('📊 User stats updated in Firebase');
       }
 
-      // Always update local stats as backup
+      
       this.updateLocalUserStats(gameData);
       return true;
 
     } catch (error) {
       console.error('Failed to update user stats in Firebase:', error);
 
-      // Fallback to local storage
+      
       this.updateLocalUserStats(gameData);
       return true;
     }
   }
 
-  // ==================== Local Storage Methods ====================
+  
 
   /**
    * Save username to localStorage
@@ -540,7 +540,7 @@ export class FirebaseService {
       const scores = JSON.parse(localStorage.getItem('dhivehi_type_scores') || '[]');
       scores.push(scoreEntry);
 
-      // Keep only last 100 scores locally
+      
       if (scores.length > 100) {
         scores.sort((a, b) => b.score - a.score);
         scores.splice(100);
@@ -560,7 +560,7 @@ export class FirebaseService {
     try {
       const allScores = JSON.parse(localStorage.getItem('dhivehi_type_scores') || '[]');
 
-      // Group by username and keep only the highest score
+      
       const bestScores = {};
       allScores.forEach(score => {
         const username = score.username;
@@ -569,7 +569,7 @@ export class FirebaseService {
         }
       });
 
-      // Convert to array and sort by score
+      
       const scores = Object.values(bestScores);
       scores.sort((a, b) => b.score - a.score);
 

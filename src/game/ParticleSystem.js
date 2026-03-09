@@ -35,10 +35,10 @@ export class ParticleSystem {
   update(deltaTime) {
     for (const particle of this.particles) {
       if (particle.type === 'star') {
-        // Move stars vertically downward
+        
         particle.y += particle.speed * deltaTime;
 
-        // Reset at top when star goes off bottom
+        
         if (particle.y > this.height + 10) {
           particle.y = -10;
           particle.x = Math.random() * this.width;

@@ -10,14 +10,14 @@ export class Enemy {
     this.y = y;
     this.speed = speed;
     this.baseSpeed = speed;
-    this.player = player; // Reference to player for homing
+    this.player = player; 
     this.targeted = false;
     this.health = word.length;
     this.maxHealth = word.length;
     this.alive = true;
     this.dying = false;
 
-    // Load ship image
+    
     this.image = new Image();
     this.image.src = '/images/badship.png';
     this.imageLoaded = false;
@@ -25,7 +25,7 @@ export class Enemy {
       this.imageLoaded = true;
     };
 
-    // Load explosion gif
+    
     this.explosionGif = new Image();
     this.explosionGif.src = explosionGifUrl;
     this.explosionGifLoaded = false;
@@ -33,27 +33,27 @@ export class Enemy {
       this.explosionGifLoaded = true;
     };
 
-    this.size = 15; // Even smaller enemy ships
+    this.size = 15; 
     this.color = '#00ff88';
     this.targetColor = '#ff4466';
-    this.wordOffset = 45; // Position text below ship and health bar
-    this.typedChars = 0; // Track how many characters have been typed
+    this.wordOffset = 45; 
+    this.typedChars = 0; 
 
     this.pulsePhase = Math.random() * Math.PI * 2;
     this.deathTimer = 0;
     this.deathDuration = 0.3;
 
-    // Hit animation properties
+    
     this.isHit = false;
     this.hitTimer = 0;
-    this.hitDuration = 0.2; // 200ms flash
+    this.hitDuration = 0.2; 
     this.hitShakeX = 0;
     this.hitShakeY = 0;
 
-    // Horizontal movement and bouncing
-    this.velocityX = (Math.random() - 0.5) * 60; // Random horizontal velocity (-30 to 30)
-    this.minX = 50; // Left boundary
-    this.maxX = 1150; // Right boundary (assume 1200px width)
+    
+    this.velocityX = (Math.random() - 0.5) * 60; 
+    this.minX = 50; 
+    this.maxX = 1150; 
   }
 
   /**
@@ -69,37 +69,37 @@ export class Enemy {
       return;
     }
 
-    // Homing behavior - move towards player
+    
     if (this.player) {
       const dx = this.player.x - this.x;
       const dy = this.player.y - this.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 0) {
-        // Move horizontally towards player (30% of speed)
+        
         const homingSpeed = this.speed * 0.3;
         this.x += (dx / distance) * homingSpeed * deltaTime;
 
-        // Move down (70% of speed)
+        
         this.y += (dy / distance) * this.speed * 0.7 * deltaTime;
       }
     } else {
-      // Fallback if no player reference
+      
       this.y += this.speed * deltaTime * 0.6;
     }
 
-    // Keep within bounds
+    
     if (this.x < this.minX) this.x = this.minX;
     if (this.x > this.maxX) this.x = this.maxX;
 
-    // Pulse animation
+    
     this.pulsePhase += deltaTime * 3;
 
-    // Update hit animation
+    
     if (this.isHit) {
       this.hitTimer += deltaTime;
 
-      // Shake effect
+      
       this.hitShakeX = (Math.random() - 0.5) * 8;
       this.hitShakeY = (Math.random() - 0.5) * 8;
 
@@ -109,12 +109,12 @@ export class Enemy {
         this.hitShakeX = 0;
         this.hitShakeY = 0;
 
-        // Restore speed after hit
+        
         this.speed = this.baseSpeed;
       }
     }
 
-    // Check if off screen (bottom)
+    
     if (this.y > window.innerHeight + 100) {
       this.alive = false;
     }
@@ -135,18 +135,18 @@ export class Enemy {
     const pulse = this.targeted ? Math.sin(this.pulsePhase) * 0.15 + 1 : 1;
     const currentSize = this.size * pulse;
 
-    // Apply hit shake
+    
     const drawX = this.x + this.hitShakeX;
     const drawY = this.y + this.hitShakeY;
 
     if (this.imageLoaded) {
-      // Draw image
+      
       if (this.targeted) {
         ctx.shadowBlur = 20;
         ctx.shadowColor = this.targetColor;
       }
 
-      // Apply hit flash effect
+      
       if (this.isHit) {
         ctx.globalAlpha = 0.5 + Math.sin(this.hitTimer * 30) * 0.5;
       }
@@ -161,7 +161,7 @@ export class Enemy {
 
       ctx.globalAlpha = 1.0;
     } else {
-      // Fallback to triangle if image not loaded
+      
       ctx.fillStyle = this.targeted ? this.targetColor : this.color;
       ctx.beginPath();
 
@@ -178,7 +178,7 @@ export class Enemy {
       }
     }
 
-    // Draw word below ship
+    
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
     ctx.font = '20px "MV Waheed", Arial, sans-serif';
@@ -190,10 +190,10 @@ export class Enemy {
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
 
-    // Show full word (we'll handle visual feedback differently)
+    
     ctx.fillText(this.word, this.x, this.y + this.wordOffset);
 
-    // Draw health bar
+    
     this.drawHealthBar(ctx);
 
     ctx.restore();
@@ -204,7 +204,7 @@ export class Enemy {
    * @param {CanvasRenderingContext2D} ctx - Canvas context
    */
   drawHealthBar(ctx) {
-    const barWidth = 30; // Smaller bar for smaller ships
+    const barWidth = 30; 
     const barHeight = 3;
     const barY = this.y + this.size + 8;
 
@@ -266,7 +266,7 @@ export class Enemy {
    */
   setTargeted(targeted) {
     this.targeted = targeted;
-    // Reset typed characters when no longer targeted
+    
     if (!targeted) {
       this.typedChars = 0;
     }
@@ -287,11 +287,11 @@ export class Enemy {
   hit(damage = 1) {
     this.health -= damage;
 
-    // Trigger hit animation
+    
     this.isHit = true;
     this.hitTimer = 0;
 
-    // Slow down when hit (70% speed)
+    
     this.speed = this.baseSpeed * 0.7;
 
     if (this.health <= 0) {

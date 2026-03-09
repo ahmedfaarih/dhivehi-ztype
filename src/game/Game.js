@@ -15,36 +15,36 @@ export class Game {
     this.ctx = canvas.getContext('2d');
     this.firebaseService = firebaseService;
 
-    // Game dimensions
+    
     this.width = 1200;
     this.height = 700;
     this.setupCanvas();
 
-    // Game state
+    
     this.score = 0;
     this.wave = 1;
     this.gameOver = false;
     this.paused = false;
-    this.waveClear = false; // Wave clear screen state
-    this.waveStats = null; // Store stats for wave clear screen
+    this.waveClear = false; 
+    this.waveStats = null; 
 
-    // Timing
+    
     this.lastTime = 0;
-    this.spawnInterval = this.getSpawnIntervalForWave(this.wave); // seconds between enemy spawns
-    this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
-    this.waveStartTime = Date.now(); // Track wave start time for WPM calculation
-    this.uiUpdateTimer = 0; // Timer for updating UI stats (update every second)
+    this.spawnInterval = this.getSpawnIntervalForWave(this.wave); 
+    this.spawnTimer = this.spawnInterval; 
+    this.waveStartTime = Date.now(); 
+    this.uiUpdateTimer = 0; 
 
-    // Wave-based enemy system
+    
     this.enemiesSpawnedThisWave = 0;
     this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
 
-    // Wave clear animation
-    this.waveClearAlpha = 0; // Fade opacity (0-1)
-    this.waveClearTimer = 0; // Time since wave clear started
-    this.waveClearDuration = 4.0; // Total duration to show wave clear (seconds)
+    
+    this.waveClearAlpha = 0; 
+    this.waveClearTimer = 0; 
+    this.waveClearDuration = 4.0; 
 
-    // Cumulative statistics across all waves
+    
     this.totalStats = {
       totalWavesCompleted: 0,
       totalScore: 0,
@@ -53,39 +53,39 @@ export class Game {
       totalPlayTime: 0
     };
 
-    // Game objects
+    
     this.player = new Player(this.width / 2, this.height - 80);
     this.enemies = [];
     this.bullets = [];
     this.particles = new ParticleSystem(this.width, this.height);
     this.input = new InputHandler(this);
 
-    // UI elements (new stat panel)
+    
     this.scoreElement = document.getElementById('score-value');
     this.levelElement = document.getElementById('level-value');
     this.wpmElement = document.getElementById('wpm-value');
     this.accuracyElement = document.getElementById('accuracy-value');
     this.healthSegments = document.querySelectorAll('.health-segment');
 
-    // Sound (simple oscillator-based sounds)
+    
     this.audioContext = null;
     this.initAudio();
 
-    // Load background image
+    
     this.backgroundImage = new Image();
     this.backgroundImage.src = backgroundImageUrl;
     this.backgroundImageLoaded = false;
-    this.backgroundScrollY = 0; // Background scroll position
-    this.backgroundScrollSpeed = 20; // Pixels per second
+    this.backgroundScrollY = 0; 
+    this.backgroundScrollSpeed = 20; 
     this.backgroundImage.onload = () => {
       this.backgroundImageLoaded = true;
     };
 
-    // Font loading
+    
     this.fontLoaded = false;
     this.loadFont();
 
-    // Initialize
+    
     this.init();
   }
 
@@ -94,17 +94,17 @@ export class Game {
    */
   async loadFont() {
     try {
-      // Check if the browser supports the Font Loading API
+      
       if ('fonts' in document) {
-        // Load the MV Waheed font
+        
         await document.fonts.load('20px "MV Waheed"');
         this.fontLoaded = true;
       } else {
-        // Fallback for older browsers - assume font loads via CSS
+        
         this.fontLoaded = true;
       }
     } catch (error) {
-      this.fontLoaded = true; // Continue anyway with fallback
+      this.fontLoaded = true; 
     }
   }
 
@@ -115,7 +115,7 @@ export class Game {
     this.canvas.width = this.width;
     this.canvas.height = this.height;
 
-    // Enable high-DPI display support
+    
     const dpr = window.devicePixelRatio || 1;
     const rect = this.canvas.getBoundingClientRect();
 
@@ -126,11 +126,11 @@ export class Game {
     this.canvas.style.width = rect.width + 'px';
     this.canvas.style.height = rect.height + 'px';
 
-    // Use simpler dimensions for game logic
+    
     this.width = rect.width;
     this.height = rect.height;
 
-    // Update player position if it exists
+    
     if (this.player) {
       this.player.y = this.height - 80;
       this.player.x = this.width / 2;
@@ -141,13 +141,13 @@ export class Game {
    * Initialize game
    */
   init() {
-    // Create starfield background
+    
     this.particles.createStarfield(150);
 
-    // Update UI
+    
     this.updateUI();
 
-    // Start game loop
+    
     this.gameLoop(0);
   }
 
@@ -158,7 +158,7 @@ export class Game {
     try {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     } catch (e) {
-      // Web Audio API not supported
+      
     }
   }
 
@@ -167,18 +167,18 @@ export class Game {
    * @param {number} timestamp - Current timestamp
    */
   gameLoop(timestamp) {
-    // Calculate delta time
+    
     const deltaTime = timestamp - this.lastTime;
     this.lastTime = timestamp;
-    const dt = deltaTime / 1000; // Convert to seconds
+    const dt = deltaTime / 1000; 
 
-    // Update and render
+    
     if (!this.gameOver && !this.paused) {
       this.update(dt);
     }
     this.render();
 
-    // Continue loop
+    
     requestAnimationFrame((t) => this.gameLoop(t));
   }
 
@@ -187,47 +187,47 @@ export class Game {
    * @param {number} dt - Delta time in seconds
    */
   update(dt) {
-    // Update background scroll
+    
     if (this.backgroundImageLoaded) {
       this.backgroundScrollY += this.backgroundScrollSpeed * dt;
-      // Reset when scrolled one full image height (seamless loop)
+      
       if (this.backgroundScrollY >= this.backgroundImage.height) {
         this.backgroundScrollY = 0;
       }
     }
 
-    // Update UI stats every second for real-time WPM and accuracy
+    
     this.uiUpdateTimer += dt;
     if (this.uiUpdateTimer >= 1.0) {
       this.updateUI();
       this.uiUpdateTimer = 0;
     }
 
-    // Update player
+    
     this.player.update(dt);
 
-    // Update particles
+    
     this.particles.update(dt);
 
-    // Update bullets
+    
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
       bullet.update(dt);
 
-      // Remove dead bullets
+      
       if (!bullet.isAlive()) {
         this.bullets.splice(i, 1);
       }
     }
 
-    // Update enemies
+    
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(dt);
 
-      // Remove dead enemies
+      
       if (!enemy.isAlive()) {
-        // If this enemy was targeted, clear the input
+        
         if (enemy.targeted) {
           this.input.clear();
         }
@@ -235,46 +235,46 @@ export class Game {
         continue;
       }
 
-      // Check if enemy reached bottom or collided with player
+      
       if ((enemy.isOffScreen(this.height + 50) || this.checkCollision(enemy, this.player)) && !enemy.dying) {
         this.player.takeDamage();
         this.updateUI();
         this.playSound('damage');
-        enemy.destroy(); // Destroy the enemy on contact
+        enemy.destroy(); 
 
-        // Check game over
+        
         if (!this.player.isAlive()) {
           this.endGame();
         }
       }
     }
 
-    // Update player target
+    
     const targetedEnemy = this.enemies.find(e => e.targeted);
     this.player.setTarget(targetedEnemy || null);
 
-    // Handle wave clear animation and auto-transition
+    
     if (this.waveClear) {
       this.waveClearTimer += dt;
 
-      // Fade in (first 0.5 seconds)
+      
       if (this.waveClearTimer < 0.5) {
         this.waveClearAlpha = this.waveClearTimer / 0.5;
       }
-      // Hold (middle duration)
+      
       else if (this.waveClearTimer < this.waveClearDuration - 0.5) {
         this.waveClearAlpha = 1.0;
       }
-      // Fade out (last 0.5 seconds)
+      
       else if (this.waveClearTimer < this.waveClearDuration) {
         this.waveClearAlpha = (this.waveClearDuration - this.waveClearTimer) / 0.5;
       }
-      // Auto-continue to next wave
+      
       else {
         this.continueToNextWave();
       }
     } else {
-      // Spawn enemies one at a time until wave quota is met
+      
       this.spawnTimer += dt;
       if (this.spawnTimer >= this.spawnInterval) {
         if (this.enemiesSpawnedThisWave < this.totalEnemiesThisWave) {
@@ -283,7 +283,7 @@ export class Game {
         }
       }
 
-      // Check if wave is complete (all enemies destroyed)
+      
       if (this.enemiesSpawnedThisWave >= this.totalEnemiesThisWave && this.enemies.length === 0) {
         this.showWaveClear();
       }
@@ -294,20 +294,20 @@ export class Game {
    * Render game
    */
   render() {
-    // Clear canvas with solid color (fallback)
+    
     this.ctx.fillStyle = '#000814';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Draw scrolling background image if loaded
+    
     if (this.backgroundImageLoaded) {
       const bgWidth = this.backgroundImage.width;
       const bgHeight = this.backgroundImage.height;
 
-      // Calculate how many times to tile horizontally
+      
       const tilesX = Math.ceil(this.width / bgWidth) + 1;
-      const tilesY = 2; // Always draw 2 vertically for seamless loop
+      const tilesY = 2; 
 
-      // Draw background tiles with vertical scroll offset
+      
       for (let x = 0; x < tilesX; x++) {
         for (let y = 0; y < tilesY; y++) {
           const drawY = y * bgHeight - this.backgroundScrollY;
@@ -322,28 +322,28 @@ export class Game {
       }
     }
 
-    // Draw starfield on top for depth effect
+    
     this.particles.draw(this.ctx);
 
-    // Draw bullets
+    
     for (const bullet of this.bullets) {
       bullet.draw(this.ctx);
     }
 
-    // Draw enemies
+    
     for (const enemy of this.enemies) {
       enemy.draw(this.ctx);
     }
 
-    // Draw player
+    
     this.player.draw(this.ctx);
 
-    // Draw wave clear screen
+    
     if (this.waveClear && this.waveStats) {
       this.drawWaveClear();
     }
 
-    // Draw game over screen
+    
     if (this.gameOver) {
       this.drawGameOver();
     }
@@ -355,12 +355,12 @@ export class Game {
    * @returns {number} Number of enemies to spawn
    */
   getEnemyCountForWave(wave) {
-    if (wave === 1) return 4;  // Wave 1: Easy start with 4 enemies
-    if (wave === 2) return 6;  // Wave 2: 6 enemies
-    if (wave === 3) return 8;  // Wave 3: 8 enemies
-    if (wave <= 5) return 10; // Waves 4-5: 10 enemies
-    if (wave <= 8) return 12; // Waves 6-8: 12 enemies
-    return 15; // Wave 9+: 15 enemies
+    if (wave === 1) return 4;  
+    if (wave === 2) return 6;  
+    if (wave === 3) return 8;  
+    if (wave <= 5) return 10; 
+    if (wave <= 8) return 12; 
+    return 15; 
   }
 
   /**
@@ -369,52 +369,52 @@ export class Game {
    * @returns {number} Seconds between spawns
    */
   getSpawnIntervalForWave(wave) {
-    if (wave === 1) return 6.0;  // Wave 1: Very slow (6 seconds)
-    if (wave === 2) return 4.5;  // Wave 2: Slower (4.5 seconds)
-    if (wave === 3) return 3.5;  // Wave 3: Medium (3.5 seconds)
-    if (wave <= 5) return 3.0;   // Waves 4-5: Normal (3 seconds)
-    if (wave <= 8) return 2.5;   // Waves 6-8: Faster (2.5 seconds)
-    return 2.0; // Wave 9+: Fast (2 seconds)
+    if (wave === 1) return 6.0;  
+    if (wave === 2) return 4.5;  
+    if (wave === 3) return 3.5;  
+    if (wave <= 5) return 3.0;   
+    if (wave <= 8) return 2.5;   
+    return 2.0; 
   }
 
   /**
    * Spawn a new enemy
    */
   spawnEnemy() {
-    // Get word for current wave with progressive difficulty
+    
     let maxLength = null;
 
-    // Progressive word length based on wave
+    
     if (this.wave <= 3) {
-      maxLength = 5; // Waves 1-3: Short words (3-5 letters)
+      maxLength = 5; 
     } else if (this.wave <= 6) {
-      maxLength = 8; // Waves 4-6: Medium words (3-8 letters)
+      maxLength = 8; 
     } else if (this.wave <= 10) {
-      maxLength = 12; // Waves 7-10: Longer words (3-12 letters)
+      maxLength = 12; 
     }
-    // Wave 11+: No limit, all word lengths allowed
+    
 
     const word = getRandomWord(this.wave, maxLength);
 
-    // Random X position with better edge margins (10% margin on each side)
+    
     const margin = this.width * 0.1;
     const spawnWidth = this.width - (margin * 2);
     const x = Math.random() * spawnWidth + margin;
 
-    // Speed increases with wave but starts very slow for wave 1
+    
     let speed;
     if (this.wave === 1) {
-      speed = 20; // Very slow for wave 1
+      speed = 20; 
     } else if (this.wave === 2) {
-      speed = 25; // Slow for wave 2
+      speed = 25; 
     } else {
-      speed = 30 + (this.wave - 2) * 5; // Progressive speed increase
+      speed = 30 + (this.wave - 2) * 5; 
     }
 
     const enemy = new Enemy(word, x, -50, speed, this.player);
     this.enemies.push(enemy);
 
-    // Increment spawn counter
+    
     this.enemiesSpawnedThisWave++;
   }
 
@@ -423,26 +423,26 @@ export class Game {
    * Show wave clear screen with statistics
    */
   showWaveClear() {
-    // Calculate wave duration in minutes
+    
     const waveEndTime = Date.now();
     const waveDurationMs = waveEndTime - this.waveStartTime;
     const waveDurationMinutes = waveDurationMs / 60000;
 
-    // Get typing statistics from input handler
+    
     const stats = this.input.getStatistics();
 
-    // Calculate WPM (words = characters / 5)
+    
     const words = stats.correctInputs / 5;
     const wpm = waveDurationMinutes > 0 ? Math.round(words / waveDurationMinutes) : 0;
 
-    // Accumulate stats across waves
+    
     this.totalStats.totalWavesCompleted++;
     this.totalStats.totalScore = this.score;
     this.totalStats.totalCorrectInputs += stats.correctInputs;
     this.totalStats.totalIncorrectInputs += stats.incorrectInputs;
     this.totalStats.totalPlayTime += waveDurationMs;
 
-    // Store stats for display
+    
     this.waveStats = {
       wave: this.wave,
       score: this.score,
@@ -452,12 +452,12 @@ export class Game {
       incorrectInputs: stats.incorrectInputs
     };
 
-    // Start wave clear animation (don't pause game)
+    
     this.waveClear = true;
     this.waveClearTimer = 0;
     this.waveClearAlpha = 0;
 
-    // Clear all enemies from screen
+    
     this.enemies = [];
   }
 
@@ -468,18 +468,18 @@ export class Game {
     this.wave++;
     this.waveStartTime = Date.now();
 
-    // Reset wave-specific counters
+    
     this.enemiesSpawnedThisWave = 0;
     this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
-    this.spawnTimer = this.spawnInterval; // Reset to spawn interval so first enemy spawns immediately
+    this.spawnTimer = this.spawnInterval; 
 
-    // Reset statistics for new wave
+    
     this.input.resetStatistics();
 
-    // Update spawn interval for new wave
+    
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
 
-    // Reset wave clear animation
+    
     this.waveClear = false;
     this.waveStats = null;
     this.waveClearTimer = 0;
@@ -502,17 +502,17 @@ export class Game {
    * Update UI elements
    */
   updateUI() {
-    // Update score (7-digit padded)
+    
     if (this.scoreElement) {
       this.scoreElement.textContent = String(this.score).padStart(7, '0');
     }
 
-    // Update level (3-digit padded)
+    
     if (this.levelElement) {
       this.levelElement.textContent = String(this.wave).padStart(3, '0');
     }
 
-    // Calculate and update WPM
+    
     if (this.wpmElement) {
       const currentTime = Date.now();
       const elapsedMinutes = (currentTime - this.waveStartTime) / 60000;
@@ -522,13 +522,13 @@ export class Game {
       this.wpmElement.textContent = String(wpm);
     }
 
-    // Calculate and update accuracy
+    
     if (this.accuracyElement) {
       const stats = this.input.getStatistics();
       this.accuracyElement.textContent = `${stats.accuracy}%`;
     }
 
-    // Update health bar segments
+    
     const currentLives = this.player.getLives();
     this.healthSegments.forEach((segment, index) => {
       if (index < currentLives) {
@@ -585,7 +585,7 @@ export class Game {
     this.gameOver = true;
     this.playSound('gameover');
 
-    // Calculate stats for saving
+    
     const overallAccuracy = this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs > 0
       ? Math.round((this.totalStats.totalCorrectInputs / (this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs)) * 100)
       : 100;
@@ -601,7 +601,7 @@ export class Game {
       accuracy: overallAccuracy
     };
 
-    // If user is logged in, save immediately
+    
     if (this.firebaseService && this.firebaseService.isLoggedIn()) {
       try {
         await this.firebaseService.saveScore(scoreData);
@@ -611,12 +611,12 @@ export class Game {
         console.error('Failed to save score:', error);
       }
     } else {
-      // User not logged in - show auth modal after a brief delay
+      
       if (this.firebaseService && window.showAuthUI) {
         setTimeout(() => {
           window.showAuthUI(async (username) => {
             if (username) {
-              // User registered - save the score and stats
+              
               try {
                 await this.firebaseService.saveScore(scoreData);
                 await this.firebaseService.updateUserStats(scoreData);
@@ -626,7 +626,7 @@ export class Game {
               }
             }
           });
-        }, 1500); // Show after 1.5 seconds
+        }, 1500); 
       }
     }
   }
@@ -637,17 +637,17 @@ export class Game {
   drawWaveClear() {
     this.ctx.save();
 
-    // Apply global alpha for fade effect
+    
     this.ctx.globalAlpha = this.waveClearAlpha;
 
-    // Subtle semi-transparent overlay
-    this.ctx.fillStyle = 'rgba(0, 15, 30, 0.6)'; // Dark blue space theme
+    
+    this.ctx.fillStyle = 'rgba(0, 15, 30, 0.6)'; 
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     const centerX = this.width / 2;
     const centerY = this.height / 2;
 
-    // Wave clear text with glow
+    
     this.ctx.fillStyle = '#5b9bd5';
     this.ctx.font = 'bold 40px Orbitron, Arial, sans-serif';
     this.ctx.textAlign = 'center';
@@ -673,7 +673,7 @@ export class Game {
     this.ctx.shadowColor = 'rgba(123, 168, 209, 0.4)';
     this.ctx.fillText(`WPM: ${this.waveStats.wpm}`, centerX, boxY);
 
-    // Accuracy
+    
     this.ctx.fillStyle = this.waveStats.accuracy >= 90 ? '#5b9bd5' :
                          this.waveStats.accuracy >= 70 ? '#ffaa00' : '#ff4466';
     this.ctx.fillText(`ACCURACY: ${this.waveStats.accuracy}%`, centerX, boxY + lineHeight);
@@ -696,14 +696,14 @@ export class Game {
   drawGameOver() {
     this.ctx.save();
 
-    // Semi-transparent overlay
+    
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     const centerX = this.width / 2;
     const centerY = this.height / 2;
 
-    // Game Over text
+    
     this.ctx.fillStyle = '#ff4466';
     this.ctx.font = 'bold 64px Orbitron, Arial, sans-serif';
     this.ctx.textAlign = 'center';
@@ -712,39 +712,39 @@ export class Game {
     this.ctx.shadowColor = '#ff4466';
     this.ctx.fillText('GAME OVER', centerX, centerY - 160);
 
-    // Final statistics
+    
     this.ctx.fillStyle = '#ffffff';
     this.ctx.font = '32px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 10;
     this.ctx.shadowColor = '#ffffff';
     this.ctx.fillText(`FINAL SCORE: ${String(this.score).padStart(6, '0')}`, centerX, centerY - 90);
 
-    // Total waves completed
+    
     this.ctx.font = '28px Orbitron, Arial, sans-serif';
     this.ctx.fillText(`Waves Completed: ${this.totalStats.totalWavesCompleted}`, centerX, centerY - 40);
 
-    // Calculate overall accuracy
+    
     const totalInputs = this.totalStats.totalCorrectInputs + this.totalStats.totalIncorrectInputs;
     const overallAccuracy = totalInputs > 0
       ? Math.round((this.totalStats.totalCorrectInputs / totalInputs) * 100)
       : 100;
 
-    // Calculate overall WPM
+    
     const totalMinutes = this.totalStats.totalPlayTime / 60000;
     const totalWords = this.totalStats.totalCorrectInputs / 5;
     const overallWPM = totalMinutes > 0 ? Math.round(totalWords / totalMinutes) : 0;
 
-    // Overall WPM
+    
     this.ctx.fillStyle = '#7ba8d1';
     this.ctx.font = '26px Orbitron, Arial, sans-serif';
     this.ctx.fillText(`Overall WPM: ${overallWPM}`, centerX, centerY + 10);
 
-    // Overall Accuracy
+    
     this.ctx.fillStyle = overallAccuracy >= 90 ? '#5b9bd5' :
                          overallAccuracy >= 70 ? '#ffaa00' : '#ff4466';
     this.ctx.fillText(`Overall Accuracy: ${overallAccuracy}%`, centerX, centerY + 50);
 
-    // Total correct/incorrect
+    
     this.ctx.fillStyle = '#cccccc';
     this.ctx.font = '22px Orbitron, Arial, sans-serif';
     this.ctx.fillText(
@@ -753,7 +753,7 @@ export class Game {
       centerY + 90
     );
 
-    // Restart instruction
+    
     this.ctx.fillStyle = '#7ba8d1';
     this.ctx.font = 'bold 26px Orbitron, Arial, sans-serif';
     this.ctx.shadowBlur = 15;
@@ -828,18 +828,18 @@ export class Game {
     this.waveStats = null;
     this.waveStartTime = Date.now();
     this.spawnInterval = this.getSpawnIntervalForWave(this.wave);
-    this.spawnTimer = this.spawnInterval; // Start at spawn interval so first enemy spawns immediately
-    this.uiUpdateTimer = 0; // Reset UI update timer
+    this.spawnTimer = this.spawnInterval; 
+    this.uiUpdateTimer = 0; 
 
-    // Reset wave-based enemy system
+    
     this.enemiesSpawnedThisWave = 0;
     this.totalEnemiesThisWave = this.getEnemyCountForWave(this.wave);
 
-    // Reset wave clear animation
+    
     this.waveClearAlpha = 0;
     this.waveClearTimer = 0;
 
-    // Reset cumulative stats
+    
     this.totalStats = {
       totalWavesCompleted: 0,
       totalScore: 0,

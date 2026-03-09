@@ -14,7 +14,7 @@ export class ScoreboardUI {
    * Create the scoreboard modal HTML
    */
   createModal() {
-    // Create modal container
+    
     this.modal = document.createElement('div');
     this.modal.id = 'scoreboard-modal';
     this.modal.className = 'modal hidden';
@@ -48,7 +48,7 @@ export class ScoreboardUI {
 
     document.body.appendChild(this.modal);
 
-    // Setup event listeners
+    
     this.setupEventListeners();
   }
 
@@ -56,32 +56,32 @@ export class ScoreboardUI {
    * Setup event listeners
    */
   setupEventListeners() {
-    // Close button
+    
     document.getElementById('close-scoreboard').addEventListener('click', () => {
       this.hide();
     });
 
-    // Tab buttons
+    
     const tabBtns = this.modal.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
         this.switchTab(tab);
 
-        // Update active state
+        
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });
 
-    // Click outside to close
+    
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
         this.hide();
       }
     });
 
-    // ESC key to close
+    
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isOpen) {
         this.hide();
@@ -101,7 +101,7 @@ export class ScoreboardUI {
       }
     } catch (error) {
       console.error('Error switching tabs:', error);
-      // Ensure loading is hidden even on error
+      
       const loadingDiv = document.getElementById('scoreboard-loading');
       if (loadingDiv) {
         loadingDiv.classList.add('hidden');
@@ -120,12 +120,12 @@ export class ScoreboardUI {
     this.modal.classList.remove('hidden');
     this.isOpen = true;
 
-    // Load global scores by default
+    
     try {
       await this.loadGlobalScores();
     } catch (error) {
       console.error('Error showing scoreboard:', error);
-      // Ensure loading is hidden even on error
+      
       const loadingDiv = document.getElementById('scoreboard-loading');
       if (loadingDiv) {
         loadingDiv.classList.add('hidden');
@@ -154,19 +154,19 @@ export class ScoreboardUI {
       return;
     }
 
-    // Show loading
+    
     console.log('🔄 Showing loading spinner');
     loadingDiv.classList.remove('hidden');
     loadingDiv.style.display = 'block';
     listDiv.innerHTML = '';
 
     try {
-      // Get scores (removed timeout - let it load naturally)
+      
       const scores = await this.firebaseService.getLeaderboard(10);
 
       console.log(`✅ Loaded ${scores ? scores.length : 0} scores`);
 
-      // Force hide loading
+      
       console.log('✅ Hiding loading spinner');
       loadingDiv.classList.add('hidden');
       loadingDiv.style.display = 'none';
@@ -176,14 +176,14 @@ export class ScoreboardUI {
         return;
       }
 
-      // Render scores
+      
       listDiv.innerHTML = this.renderScoresList(scores, true);
       console.log('✅ Scores rendered');
 
     } catch (error) {
       console.error('❌ Failed to load scores:', error);
 
-      // Force hide loading even on error
+      
       console.log('⚠️ Hiding loading spinner (error path)');
       loadingDiv.classList.add('hidden');
       loadingDiv.style.display = 'none';
@@ -206,7 +206,7 @@ export class ScoreboardUI {
       return;
     }
 
-    // Show loading
+    
     console.log('🔄 Showing loading spinner');
     loadingDiv.classList.remove('hidden');
     loadingDiv.style.display = 'block';
@@ -223,7 +223,7 @@ export class ScoreboardUI {
     console.log(`👤 Loading scores for user: ${currentUsername}`);
 
     try {
-      // Get user stats
+      
       const stats = await this.firebaseService.getUserStats().catch(err => {
         console.warn('Failed to load stats from Firebase, using local only:', err);
         return null;
@@ -231,7 +231,7 @@ export class ScoreboardUI {
 
       console.log('📊 User stats:', stats);
 
-      // Get local scores for this user
+      
       const allScores = JSON.parse(localStorage.getItem('dhivehi_type_scores') || '[]');
       const userScores = allScores
         .filter(s => s.username === currentUsername)
@@ -240,14 +240,14 @@ export class ScoreboardUI {
 
       console.log(`✅ Found ${userScores.length} personal scores`);
 
-      // Force hide loading
+      
       console.log('✅ Hiding loading spinner');
       loadingDiv.classList.add('hidden');
       loadingDiv.style.display = 'none';
 
       let html = '';
 
-      // Show user stats if available
+      
       if (stats) {
         html += `
           <div class="user-stats-panel">
@@ -274,7 +274,7 @@ export class ScoreboardUI {
         `;
       }
 
-      // Show personal best scores
+      
       if (userScores.length > 0) {
         html += '<h3 style="margin-top: 20px; color: #7ba8d1; text-align: center; font-family: \'Orbitron\', Arial, sans-serif;">Your Top 5 Scores</h3>';
         html += this.renderScoresList(userScores, false);
@@ -287,7 +287,7 @@ export class ScoreboardUI {
     } catch (error) {
       console.error('❌ Failed to load personal scores:', error);
 
-      // Force hide loading even on error
+      
       console.log('⚠️ Hiding loading spinner (error path)');
       loadingDiv.classList.add('hidden');
       loadingDiv.style.display = 'none';

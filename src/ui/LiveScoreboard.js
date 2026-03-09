@@ -18,7 +18,7 @@ export class LiveScoreboard {
    * Create the live scoreboard HTML
    */
   createScoreboard() {
-    // Use existing container from HTML
+    
     this.container = document.getElementById('live-scoreboard-container');
     if (!this.container) {
       console.error('Live scoreboard container not found!');
@@ -55,7 +55,7 @@ export class LiveScoreboard {
    * Setup button click handlers
    */
   setupButtons() {
-    // Leaderboard button
+    
     const leaderboardBtn = document.getElementById('view-full-leaderboard-btn');
     if (leaderboardBtn) {
       leaderboardBtn.addEventListener('click', () => {
@@ -65,7 +65,7 @@ export class LiveScoreboard {
       });
     }
 
-    // Login/Register button
+    
     const loginRegisterBtn = document.getElementById('login-register-btn');
     if (loginRegisterBtn) {
       loginRegisterBtn.addEventListener('click', () => {
@@ -85,10 +85,10 @@ export class LiveScoreboard {
    * Start auto-refresh every 30 seconds
    */
   startAutoRefresh() {
-    // Load immediately
+    
     this.loadScores();
 
-    // Refresh every 30 seconds
+    
     this.refreshInterval = setInterval(() => {
       this.loadScores();
     }, 30000);
@@ -107,7 +107,7 @@ export class LiveScoreboard {
       loginPrompt.classList.add('hidden');
       if (loginRegisterBtn) loginRegisterBtn.classList.add('hidden');
 
-      // Show user status with logout button
+      
       const username = this.firebaseService.getCurrentUsername();
       userStatus.innerHTML = `
         <div class="user-info">
@@ -117,7 +117,7 @@ export class LiveScoreboard {
       `;
       userStatus.classList.remove('hidden');
 
-      // Setup logout button
+      
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
@@ -155,7 +155,7 @@ export class LiveScoreboard {
         return;
       }
 
-      // Render scores
+      
       listDiv.innerHTML = scores.map((score, index) => this.renderScoreItem(score, index + 1)).join('');
 
     } catch (error) {

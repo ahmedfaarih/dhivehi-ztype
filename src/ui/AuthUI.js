@@ -18,7 +18,7 @@ export class AuthUI {
     this.modal = document.createElement('div');
     this.modal.id = 'auth-modal';
     this.modal.className = 'modal hidden';
-    this.currentTab = 'register'; // Default to register tab
+    this.currentTab = 'register'; 
 
     this.modal.innerHTML = `
       <div class="modal-content">
@@ -69,17 +69,17 @@ export class AuthUI {
 
     document.body.appendChild(this.modal);
 
-    // Get elements
+    
     this.usernameInput = document.getElementById('username-input');
     this.passwordInput = document.getElementById('password-input');
     this.submitBtn = document.getElementById('submit-auth');
     this.skipBtn = document.getElementById('skip-auth');
     this.statusDiv = document.getElementById('auth-status');
 
-    // Setup event listeners
+    
     this.setupEventListeners();
 
-    // Explicitly disable JTK on auth inputs
+    
     this.disableJTKOnAuthInputs();
   }
 
@@ -87,22 +87,22 @@ export class AuthUI {
    * Disable JTK keyboard on authentication inputs
    */
   disableJTKOnAuthInputs() {
-    // Simply ensure these inputs don't have the JTK class
+    
     if (this.usernameInput) {
       this.usernameInput.classList.remove('thaanaKeyboardInput');
     }
     if (this.passwordInput) {
       this.passwordInput.classList.remove('thaanaKeyboardInput');
 
-      // Ensure password field stays focusable and typeable
+      
       this.passwordInput.removeAttribute('readonly');
       this.passwordInput.removeAttribute('disabled');
       this.passwordInput.style.pointerEvents = 'auto';
     }
 
-    // Prevent any focus stealing
+    
     const preventFocusSteal = () => {
-      // Remove any global focus event listeners that JTK might have added
+      
       document.body.style.userSelect = 'auto';
     };
     preventFocusSteal();
@@ -112,23 +112,23 @@ export class AuthUI {
    * Setup event listeners
    */
   setupEventListeners() {
-    // Tab switching
+    
     const tabButtons = this.modal.querySelectorAll('.auth-tab');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
         this.switchTab(tab);
 
-        // Update active state
+        
         tabButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });
 
-    // Submit button
+    
     this.submitBtn.addEventListener('click', () => this.handleSubmit());
 
-    // Enter key on both inputs - use keydown instead of keypress
+    
     this.usernameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -143,10 +143,10 @@ export class AuthUI {
       }
     });
 
-    // Skip button
+    
     this.skipBtn.addEventListener('click', () => this.handleSkip());
 
-    // Ensure both inputs are clickable and focusable without JTK interference
+    
     [this.usernameInput, this.passwordInput].forEach(input => {
       input.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -157,7 +157,7 @@ export class AuthUI {
       }, true);
 
       input.addEventListener('focus', () => {
-        // Re-apply protections when field gets focus
+        
         input.classList.remove('thaanaKeyboardInput');
       });
     });
@@ -175,7 +175,7 @@ export class AuthUI {
       this.submitBtn.textContent = 'Create Account & Save Score';
     }
 
-    // Clear inputs and status
+    
     this.usernameInput.value = '';
     this.passwordInput.value = '';
     this.statusDiv.classList.add('hidden');
@@ -208,7 +208,7 @@ export class AuthUI {
       return;
     }
 
-    // Disable button during submission
+    
     this.submitBtn.disabled = true;
     const originalText = this.submitBtn.textContent;
     this.submitBtn.textContent = this.currentTab === 'login' ? 'Logging in...' : 'Creating account...';
@@ -267,7 +267,7 @@ export class AuthUI {
   show(callback) {
     this.onAuthSuccess = callback;
 
-    // Check if already logged in
+    
     const currentUsername = this.firebaseService.getCurrentUsername();
     if (currentUsername) {
       console.log(`Already logged in as ${currentUsername}`);
@@ -279,16 +279,16 @@ export class AuthUI {
     this.usernameInput.value = '';
     this.passwordInput.value = '';
 
-    // Re-apply JTK protection
+    
     this.disableJTKOnAuthInputs();
 
-    // Reset to register tab
+    
     this.switchTab('register');
     const tabButtons = this.modal.querySelectorAll('.auth-tab');
     tabButtons.forEach(b => b.classList.remove('active'));
     tabButtons[0].classList.add('active');
 
-    // Focus username input
+    
     this.usernameInput.focus();
   }
 

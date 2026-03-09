@@ -9,8 +9,8 @@ export class SoundManager {
   constructor() {
     this.sounds = {};
     this.loaded = false;
-    this.volume = 0.5; // Default volume (0.0 to 1.0)
-    this.backgroundVolume = 0.3; // Lower volume for background music
+    this.volume = 0.5; 
+    this.backgroundVolume = 0.3; 
   }
 
   /**
@@ -18,20 +18,20 @@ export class SoundManager {
    */
   async loadSounds() {
     try {
-      // Load shotgun sound (correct typing)
+      
       this.sounds.shotgun = new Audio(shotgunSoundUrl);
       this.sounds.shotgun.volume = this.volume;
 
-      // Load empty sound (incorrect typing)
+      
       this.sounds.empty = new Audio(emptySoundUrl);
-      this.sounds.empty.volume = this.volume * 0.7; // Slightly quieter
+      this.sounds.empty.volume = this.volume * 0.7; 
 
-      // Load background music
+      
       this.sounds.background = new Audio(backgroundSoundUrl);
       this.sounds.background.volume = this.backgroundVolume;
-      this.sounds.background.loop = true; // Loop the background music
+      this.sounds.background.loop = true; 
 
-      // Preload the audio
+      
       await Promise.all([
         this.sounds.shotgun.load(),
         this.sounds.empty.load(),
@@ -51,7 +51,7 @@ export class SoundManager {
     if (!this.loaded || !this.sounds.shotgun) return;
 
     try {
-      // Clone the audio node to allow rapid firing
+      
       const sound = this.sounds.shotgun.cloneNode();
       sound.volume = this.volume;
       sound.play();
@@ -67,7 +67,7 @@ export class SoundManager {
     if (!this.loaded || !this.sounds.empty) return;
 
     try {
-      // Clone the audio node to allow rapid firing
+      
       const sound = this.sounds.empty.cloneNode();
       sound.volume = this.volume * 0.7;
       sound.play();
@@ -84,7 +84,7 @@ export class SoundManager {
 
     try {
       this.sounds.background.play().catch(error => {
-        // Background music autoplay blocked. Will play on user interaction.
+        
       });
     } catch (error) {
       console.error('Error playing background music:', error);
