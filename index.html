@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ދިވެހި ޓައިޕިން | Dhivehi Type</title>
-    <!-- Preload MV Waheed font for better loading -->
     <link rel="preload" href="/src/fonts/MV_Waheed.otf" as="font" type="font/otf" crossorigin="anonymous" />
     <script type="text/javascript" src="/jtk.min.js"></script>
     <script type="text/javascript">
@@ -17,10 +16,8 @@
   </head>
   <body>
     <div id="game-wrapper">
-      <!-- Title -->
       <div id="game-title">ދިވެހި ޓައިޕިން</div>
 
-      <!-- Health Bar (Top Right) -->
       <div id="health-container">
         <div id="health-bar">
           <div class="health-segment"></div>
@@ -31,20 +28,15 @@
         </div>
       </div>
 
-      <!-- Left Leaderboard Panel -->
       <div id="live-scoreboard-container"></div>
 
-      <!-- Main Game Container -->
       <div id="game-container">
-        <!-- Canvas -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- Input field with JTK Thaana keyboard support -->
         <input type="text" id="hidden-input" class="thaanaKeyboardInput" placeholder="ލިޔަން ފަށާ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         <input type="hidden" name="hidden-input_thaanaKeyboardState" value="phonetic" />
       </div>
 
-      <!-- Right Stats Panel -->
       <div id="stats-panel">
         <div class="stat-item">
           <div class="stat-label">SCORE:</div>

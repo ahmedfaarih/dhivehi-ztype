@@ -104,7 +104,6 @@ The game includes 73 carefully selected Dhivehi words across 3 difficulty levels
 ### Lives
 - Start with 3 lives
 - Lose a life when an enemy reaches the bottom
-- Game over when all lives are lost
 
 ## 🔧 Development
 
